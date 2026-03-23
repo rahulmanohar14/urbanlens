@@ -2,29 +2,24 @@
 
 export default function MapLegend() {
   const items = [
-    { color: "#22c55e", label: "< 100 incidents" },
-    { color: "#facc15", label: "100–300" },
-    { color: "#f97316", label: "300–500" },
-    { color: "#dc2626", label: "500–700" },
-    { color: "#991b1b", label: "700–1000" },
-    { color: "#7f1d1d", label: "1000+" },
+    { color: "#10b981", label: "Low" },
+    { color: "#facc15", label: "Medium" },
+    { color: "#f97316", label: "High" },
+    { color: "#dc2626", label: "Very High" },
+    { color: "#7f1d1d", label: "Critical" },
   ];
 
   return (
-    <div
-      className="rounded-lg border p-3 mt-3 inline-flex items-center gap-4 text-xs"
-      style={{ background: "var(--card)", borderColor: "var(--border)" }}
-    >
-      <span style={{ color: "var(--muted)" }}>Incident density:</span>
-      {items.map((item) => (
-        <div key={item.label} className="flex items-center gap-1.5">
-          <div
-            className="w-3 h-3 rounded-sm"
-            style={{ background: item.color }}
-          />
-          <span style={{ color: "var(--muted)" }}>{item.label}</span>
-        </div>
-      ))}
+    <div className="flex items-center gap-4 mt-3 text-xs" style={{ color: "var(--muted)" }}>
+      <span className="font-medium uppercase tracking-wide">Density</span>
+      <div className="flex items-center gap-3">
+        {items.map((item) => (
+          <div key={item.label} className="flex items-center gap-1.5">
+            <div className="w-2.5 h-2.5 rounded-full" style={{ background: item.color }} />
+            <span>{item.label}</span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

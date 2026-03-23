@@ -13,88 +13,48 @@ interface Props {
   incidents: Incident[];
 }
 
-const categoryEmoji: Record<string, string> = {
-  "Highway Maintenance": "🛣️",
-  Sanitation: "🗑️",
-  "Code Enforcement": "📋",
-  "Enforcement & Abandoned Vehicles": "🚗",
-  "Street Cleaning": "🧹",
-  "Signs & Signals": "🚦",
-  "Noise Disturbance": "🔊",
-  Housing: "🏠",
-  "Animal Issues": "🐾",
-};
-
 export default function IncidentList({ incidents }: Props) {
   if (incidents.length === 0) {
     return (
-      <div
-        className="rounded-xl p-6 border text-center"
-        style={{
-          background: "var(--card)",
-          borderColor: "var(--border)",
-          color: "var(--muted)",
-        }}
-      >
-        <p className="text-lg mb-2">📍 Click anywhere on the map</p>
-        <p className="text-sm">
-          to search for incidents within 500m of that location
-        </p>
+      <div className="glass rounded-xl p-8 text-center">
+        <div className="w-10 h-10 rounded-full mx-auto mb-3 flex items-center justify-center" style={{ background: "var(--accent-glow)", color: "var(--accent)" }}>
+          <span className="text-lg">+</span>
+        </div>
+        <p className="text-sm font-medium mb-1">Radius Search</p>
+        <p className="text-xs" style={{ color: "var(--muted)" }}>Click anywhere on the map to find incidents within 500m</p>
       </div>
     );
   }
 
   return (
-    <div
-      className="rounded-xl border overflow-hidden"
-      style={{ background: "var(--card)", borderColor: "var(--border)" }}
-    >
-      <div className="p-4 border-b" style={{ borderColor: "var(--border)" }}>
-        <h3 className="font-semibold">
-          Nearby Incidents ({incidents.length})
-        </h3>
+    <div className="glass rounded-xl overflow-hidden">
+      <div className="px-4 py-3 border-b flex items-center justify-between" style={{ borderColor: "var(--border)" }}>
+        <h3 className="text-sm font-medium">Nearby Results</h3>
+        <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "var(--accent-glow)", color: "var(--accent)" }}>{incidents.length}</span>
       </div>
-      <div className="max-h-[400px] overflow-y-auto">
-        {incidents.map((inc) => (
+      <div className="max-h-[420px] overflow-y-auto">
+        {incidents.map((inc, index) => (
           <div
             key={inc.id}
-            className="p-3 border-b flex items-start gap-3 transition-colors hover:bg-white/5"
-            style={{ borderColor: "var(--border)" }}
+            className="px-4 py-3 border-b transition-colors hover:bg-white/[0.02] fade-in"
+            style={{ borderColor: "var(--border)", animationDelay: `${index * 30}ms` }}
           >
-            <span className="text-lg">
-              {categoryEmoji[inc.category] || "📌"}
-            </span>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate">{inc.category}</p>
-              <p
-                className="text-xs truncate"
-                style={{ color: "var(--muted)" }}
-              >
-                {inc.street_address || "No address"}
-              </p>
-            </div>
-            <div className="text-right">
+            <div className="flex items-center justify-between mb-1">
+              <p className="text-xs font-medium">{inc.category}</p>
               <span
-                className="text-xs px-2 py-0.5 rounded-full"
+                className="text-[10px] px-2 py-0.5 rounded-full font-medium"
                 style={{
-                  background:
-                    inc.status === "Open"
-                      ? "rgba(239,68,68,0.15)"
-                      : "rgba(34,197,94,0.15)",
-                  color: inc.status === "Open" ? "#ef4444" : "#22c55e",
+                  background: inc.status === "Open" ? "rgba(239,68,68,0.1)" : "rgba(16,185,129,0.1)",
+                  color: inc.status === "Open" ? "#ef4444" : "#10b981",
                 }}
               >
                 {inc.status}
               </span>
-              {inc.distance_meters && (
-                <p
-                  className="text-xs mt-1"
-                  style={{ color: "var(--muted)" }}
-                >
-                  {inc.distance_meters}m
-                </p>
-              )}
             </div>
+            <p className="text-xs truncate" style={{ color: "var(--muted)" }}>{inc.street_address || "No address available"}</p>
+            {inc.distance_meters && (
+              <p className="text-[10px] mt-1" style={{ color: "var(--muted)" }}>{inc.distance_meters}m away</p>
+            )}
           </div>
         ))}
       </div>

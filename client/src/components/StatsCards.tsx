@@ -23,21 +23,11 @@ export default function StatsCards() {
 
   if (!data) {
     return (
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-4 gap-3">
         {[...Array(4)].map((_, i) => (
-          <div
-            key={i}
-            className="rounded-xl p-5 animate-pulse"
-            style={{ background: "var(--card)" }}
-          >
-            <div
-              className="h-4 w-24 rounded mb-3"
-              style={{ background: "var(--border)" }}
-            />
-            <div
-              className="h-8 w-16 rounded"
-              style={{ background: "var(--border)" }}
-            />
+          <div key={i} className="glass rounded-xl p-5 animate-pulse">
+            <div className="h-3 w-20 rounded mb-3" style={{ background: "var(--border)" }} />
+            <div className="h-7 w-14 rounded" style={{ background: "var(--border)" }} />
           </div>
         ))}
       </div>
@@ -45,45 +35,18 @@ export default function StatsCards() {
   }
 
   const cards = [
-    {
-      label: "Total Incidents",
-      value: data.total_incidents.toLocaleString(),
-      color: "#3b82f6",
-    },
-    {
-      label: "Open Incidents",
-      value: data.open_incidents.toLocaleString(),
-      color: "#ef4444",
-    },
-    {
-      label: "Avg Resolution",
-      value: `${data.avg_resolution_hours}h`,
-      color: "#f59e0b",
-    },
-    {
-      label: "Total Crimes",
-      value: data.total_crimes.toLocaleString(),
-      color: "#8b5cf6",
-    },
+    { label: "Total Incidents", value: data.total_incidents.toLocaleString(), change: null, color: "#6366f1" },
+    { label: "Open Cases", value: data.open_incidents.toLocaleString(), change: null, color: "#ef4444" },
+    { label: "Avg Resolution", value: `${data.avg_resolution_hours}h`, change: null, color: "#f59e0b" },
+    { label: "Neighborhoods", value: "26", change: null, color: "#10b981" },
   ];
 
   return (
-    <div className="grid grid-cols-4 gap-4">
+    <div className="grid grid-cols-4 gap-3 fade-in">
       {cards.map((card) => (
-        <div
-          key={card.label}
-          className="rounded-xl p-5 border transition-colors"
-          style={{
-            background: "var(--card)",
-            borderColor: "var(--border)",
-          }}
-        >
-          <p className="text-sm mb-1" style={{ color: "var(--muted)" }}>
-            {card.label}
-          </p>
-          <p className="text-2xl font-bold" style={{ color: card.color }}>
-            {card.value}
-          </p>
+        <div key={card.label} className="stat-card glass rounded-xl p-5 transition-all duration-200 hover:bg-white/[0.03]">
+          <p className="text-xs font-medium tracking-wide uppercase mb-2" style={{ color: "var(--muted)" }}>{card.label}</p>
+          <p className="text-2xl font-semibold tracking-tight" style={{ color: card.color }}>{card.value}</p>
         </div>
       ))}
     </div>
