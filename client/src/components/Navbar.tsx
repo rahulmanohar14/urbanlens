@@ -6,6 +6,7 @@ import Link from "next/link";
 const navItems = [
   { href: "/", label: "🗺️ Dashboard" },
   { href: "/trends", label: "📊 Trends" },
+  { href: "/forecast", label: "🔮 Forecast" },
 ];
 
 export default function Navbar() {
