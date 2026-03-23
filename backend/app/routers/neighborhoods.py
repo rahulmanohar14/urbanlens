@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException
+# backend/app/routers/neighborhoods.py
+
+from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Optional
@@ -60,24 +62,27 @@ async def get_neighborhood(
 @router.get("/{neighborhood_id}/incidents")
 async def neighborhood_incidents(
     neighborhood_id: int,
-    category: Optional[str] = None,
-    limit: int = 100,
+    category: Optional[str] = Query(None),
+    limit: int = Query(100),
     db: AsyncSession = Depends(get_db),
 ):
     """Get incidents in a specific neighborhood."""
-    query = text("""
+    category_filter = "AND i.category = :category" if category else ""
+    params = {"nid": neighborhood_id, "limit": limit}
+    if category:
+        params["category"] = category
+
+    query = text(f"""
         SELECT
             i.id, i.case_id, i.category, i.status,
             i.open_dt, i.latitude, i.longitude, i.street_address
         FROM incidents i
         WHERE i.neighborhood_id = :nid
-        AND (:category IS NULL OR i.category = :category)
+        {category_filter}
         ORDER BY i.open_dt DESC
         LIMIT :limit
     """)
-    result = await db.execute(query, {
-        "nid": neighborhood_id, "category": category, "limit": limit
-    })
+    result = await db.execute(query, params)
     return [
         {
             "id": r[0], "case_id": r[1], "category": r[2], "status": r[3],
