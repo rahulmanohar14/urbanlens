@@ -1,320 +1,143 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  Cell,
-} from "recharts";
-import {
-  getTrends,
-  getCategoryBreakdown,
-  getResolutionTimes,
-  getComparison,
-  getNeighborhoods,
-} from "@/lib/api";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Cell } from "recharts";
+import { getTrends, getCategoryBreakdown, getResolutionTimes, getComparison, getNeighborhoods } from "@/lib/api";
 
-// Colors for the bar charts
-const COLORS = [
-  "#3b82f6", "#ef4444", "#22c55e", "#f59e0b", "#8b5cf6",
-  "#ec4899", "#06b6d4", "#f97316", "#84cc16", "#6366f1",
-];
+const COLORS = ["#6c5ce7", "#ff6b6b", "#00b894", "#fdcb6e", "#a29bfe", "#fd79a8", "#00cec9", "#e17055", "#55efc4", "#74b9ff"];
+const card = { background: "#12121a", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "12px", padding: "24px" };
+const tt = { contentStyle: { background: "#12121a", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "10px", fontSize: "11px", fontFamily: "Inter" } };
+const sectionTitle = { fontSize: "11px", fontWeight: 600, color: "#55556a", textTransform: "uppercase" as const, letterSpacing: "0.5px", marginBottom: "16px" };
 
 export default function TrendsPage() {
   const [trends, setTrends] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
-  const [resolutionTimes, setResolutionTimes] = useState<any[]>([]);
+  const [resolution, setResolution] = useState<any[]>([]);
   const [comparison, setComparison] = useState<any[]>([]);
-  const [neighborhoods, setNeighborhoods] = useState<any[]>([]);
-  const [selectedNeighborhood, setSelectedNeighborhood] = useState<string>("");
+  const [hoods, setHoods] = useState<any[]>([]);
+  const [selHood, setSelHood] = useState("");
   const [loading, setLoading] = useState(true);
 
-  // Load all data on page load
   useEffect(() => {
-    Promise.all([
-      getTrends({ days: 365 }),
-      getCategoryBreakdown({ days: 365 }),
-      getResolutionTimes(),
-      getComparison({ days: 365 }),
-      getNeighborhoods(),
-    ])
-      .then(([trendsRes, catRes, resRes, compRes, hoodRes]) => {
-        setTrends(trendsRes.data.data || []);
-        setCategories(catRes.data || []);
-        setResolutionTimes(resRes.data || []);
-        setComparison(compRes.data || []);
-        setNeighborhoods(hoodRes.data || []);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error("Failed to load analytics:", err);
-        setLoading(false);
-      });
+    Promise.all([getTrends({ days: 365 }), getCategoryBreakdown({ days: 365 }), getResolutionTimes(), getComparison({ days: 365 }), getNeighborhoods()])
+      .then(([t, c, r, comp, h]) => { setTrends(t.data.data || []); setCategories(c.data || []); setResolution(r.data || []); setComparison(comp.data || []); setHoods(h.data || []); setLoading(false); })
+      .catch(() => setLoading(false));
   }, []);
 
-  // Reload trends when neighborhood filter changes
-  const handleNeighborhoodChange = async (neighborhoodId: string) => {
-    setSelectedNeighborhood(neighborhoodId);
-    try {
-      const params: any = { days: 365 };
-      if (neighborhoodId) params.neighborhood_id = parseInt(neighborhoodId);
-      const res = await getTrends(params);
-      setTrends(res.data.data || []);
-    } catch (err) {
-      console.error("Failed to filter trends:", err);
-    }
+  const filterByHood = async (id: string) => {
+    setSelHood(id);
+    const params: any = { days: 365 };
+    if (id) params.neighborhood_id = parseInt(id);
+    const res = await getTrends(params);
+    setTrends(res.data.data || []);
   };
 
-  if (loading) {
-    return (
-      <div
-        className="min-h-screen p-6 flex items-center justify-center"
-        style={{ color: "var(--muted)" }}
-      >
-        <p className="text-xl">Loading analytics...</p>
+  if (loading) return (
+    <div style={{ maxWidth: "1400px", margin: "0 auto", padding: "24px" }}>
+      <div style={{ ...card, height: "400px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <p style={{ fontSize: "13px", color: "#55556a" }}>Loading analytics...</p>
       </div>
-    );
-  }
+    </div>
+  );
 
   return (
-    <div className="min-h-screen p-6">
-      {/* Header with back link */}
-      <div className="mb-6 flex items-center justify-between">
+    <div style={{ maxWidth: "1400px", margin: "0 auto", padding: "24px" }}>
+      {/* Header */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "24px", flexWrap: "wrap", gap: "16px" }}>
         <div>
-          <a href="/" className="text-sm mb-2 inline-block" style={{ color: "var(--accent)" }}>
-            ← Back to Dashboard
-          </a>
-          <h1 className="text-3xl font-bold">📊 Trends & Analytics</h1>
-          <p style={{ color: "var(--muted)" }}>
-            Time-series analysis, category breakdowns, and neighborhood comparisons
-          </p>
+          <h1 style={{ fontSize: "20px", fontWeight: 600, letterSpacing: "-0.3px" }}>Analytics</h1>
+          <p style={{ fontSize: "12px", color: "#55556a", marginTop: "4px" }}>Time-series analysis, category breakdown, and neighborhood comparison</p>
         </div>
-
-        {/* Neighborhood filter */}
-        <select
-          value={selectedNeighborhood}
-          onChange={(e) => handleNeighborhoodChange(e.target.value)}
-          className="px-4 py-2 rounded-lg border text-sm"
-          style={{
-            background: "var(--card)",
-            borderColor: "var(--border)",
-            color: "var(--foreground)",
-          }}
-        >
+        <select value={selHood} onChange={(e) => filterByHood(e.target.value)} style={{ fontSize: "12px", padding: "8px 14px", borderRadius: "8px", background: "#12121a", border: "1px solid rgba(255,255,255,0.08)", color: "#eeeef0", cursor: "pointer", minWidth: "180px" }}>
           <option value="">All Neighborhoods</option>
-          {neighborhoods.map((n: any) => (
-            <option key={n.id} value={n.id}>
-              {n.name}
-            </option>
-          ))}
+          {hoods.map((n: any) => <option key={n.id} value={n.id}>{n.name}</option>)}
         </select>
       </div>
 
-      {/* Row 1: Trends Line Chart */}
-      <div
-        className="rounded-xl border p-5 mb-6"
-        style={{ background: "var(--card)", borderColor: "var(--border)" }}
-      >
-        <h2 className="text-lg font-semibold mb-4">
-          Incident Trends (with 7-day Rolling Average)
-        </h2>
+      {/* Trends Chart */}
+      <div style={{ ...card, marginBottom: "16px" }}>
+        <p style={sectionTitle}>Incident Trends</p>
         {trends.length > 0 ? (
-          <ResponsiveContainer width="100%" height={350}>
+          <ResponsiveContainer width="100%" height={320}>
             <LineChart data={trends}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#2a2a2a" />
-              <XAxis
-                dataKey="date"
-                stroke="#737373"
-                fontSize={11}
-                tickFormatter={(val) => val.slice(5)}
-              />
-              <YAxis stroke="#737373" fontSize={11} />
-              <Tooltip
-                contentStyle={{
-                  background: "#1a1a1a",
-                  border: "1px solid #2a2a2a",
-                  borderRadius: "8px",
-                  fontSize: "12px",
-                }}
-              />
-              <Line
-                type="monotone"
-                dataKey="count"
-                stroke="#3b82f6"
-                strokeWidth={1}
-                dot={false}
-                name="Daily Count"
-              />
-              <Line
-                type="monotone"
-                dataKey="rolling_avg_7d"
-                stroke="#f59e0b"
-                strokeWidth={2}
-                dot={false}
-                name="7-day Avg"
-              />
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
+              <XAxis dataKey="date" stroke="#55556a" fontSize={10} tickFormatter={(v) => v.slice(5)} />
+              <YAxis stroke="#55556a" fontSize={10} />
+              <Tooltip {...tt} />
+              <Line type="monotone" dataKey="count" stroke="#6c5ce7" strokeWidth={1} dot={false} name="Daily" />
+              <Line type="monotone" dataKey="rolling_avg_7d" stroke="#fdcb6e" strokeWidth={2} dot={false} name="7-day Avg" />
             </LineChart>
           </ResponsiveContainer>
-        ) : (
-          <p style={{ color: "var(--muted)" }}>No trend data available</p>
-        )}
+        ) : <p style={{ fontSize: "12px", color: "#55556a" }}>No data available</p>}
       </div>
 
-      {/* Row 2: Category Breakdown + Resolution Times */}
-      <div className="grid grid-cols-2 gap-6 mb-6">
-        {/* Category Breakdown */}
-        <div
-          className="rounded-xl border p-5"
-          style={{ background: "var(--card)", borderColor: "var(--border)" }}
-        >
-          <h2 className="text-lg font-semibold mb-4">Incidents by Category</h2>
+      {/* Category + Resolution */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "16px" }}>
+        <div style={card}>
+          <p style={sectionTitle}>By Category</p>
           {categories.length > 0 ? (
-            <ResponsiveContainer width="100%" height={350}>
+            <ResponsiveContainer width="100%" height={320}>
               <BarChart data={categories.slice(0, 10)} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" stroke="#2a2a2a" />
-                <XAxis type="number" stroke="#737373" fontSize={11} />
-                <YAxis
-                  type="category"
-                  dataKey="category"
-                  stroke="#737373"
-                  fontSize={10}
-                  width={150}
-                  tickFormatter={(val) =>
-                    val.length > 20 ? val.slice(0, 20) + "..." : val
-                  }
-                />
-                <Tooltip
-                  contentStyle={{
-                    background: "#1a1a1a",
-                    border: "1px solid #2a2a2a",
-                    borderRadius: "8px",
-                    fontSize: "12px",
-                  }}
-                />
-                <Bar dataKey="count" name="Incidents" radius={[0, 4, 4, 0]}>
-                  {categories.slice(0, 10).map((_, index) => (
-                    <Cell key={index} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Bar>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
+                <XAxis type="number" stroke="#55556a" fontSize={10} />
+                <YAxis type="category" dataKey="category" stroke="#55556a" fontSize={9} width={130} tickFormatter={(v) => v.length > 18 ? v.slice(0, 18) + "..." : v} />
+                <Tooltip {...tt} />
+                <Bar dataKey="count" radius={[0, 4, 4, 0]}>{categories.slice(0, 10).map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}</Bar>
               </BarChart>
             </ResponsiveContainer>
-          ) : (
-            <p style={{ color: "var(--muted)" }}>No category data available</p>
-          )}
+          ) : <p style={{ fontSize: "12px", color: "#55556a" }}>No data</p>}
         </div>
 
-        {/* Resolution Times */}
-        <div
-          className="rounded-xl border p-5"
-          style={{ background: "var(--card)", borderColor: "var(--border)" }}
-        >
-          <h2 className="text-lg font-semibold mb-4">
-            Avg Resolution Time by Category (hours)
-          </h2>
-          {resolutionTimes.length > 0 ? (
-            <ResponsiveContainer width="100%" height={350}>
-              <BarChart data={resolutionTimes.slice(0, 10)} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" stroke="#2a2a2a" />
-                <XAxis type="number" stroke="#737373" fontSize={11} />
-                <YAxis
-                  type="category"
-                  dataKey="category"
-                  stroke="#737373"
-                  fontSize={10}
-                  width={150}
-                  tickFormatter={(val) =>
-                    val.length > 20 ? val.slice(0, 20) + "..." : val
-                  }
-                />
-                <Tooltip
-                  contentStyle={{
-                    background: "#1a1a1a",
-                    border: "1px solid #2a2a2a",
-                    borderRadius: "8px",
-                    fontSize: "12px",
-                  }}
-                  formatter={(value: any) => [`${value}h`, "Avg Time"]}
-                />
-                <Bar dataKey="avg_hours" name="Avg Hours" radius={[0, 4, 4, 0]}>
-                  {resolutionTimes.slice(0, 10).map((_, index) => (
-                    <Cell key={index} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Bar>
+        <div style={card}>
+          <p style={sectionTitle}>Resolution Time (hours)</p>
+          {resolution.length > 0 ? (
+            <ResponsiveContainer width="100%" height={320}>
+              <BarChart data={resolution.slice(0, 10)} layout="vertical">
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
+                <XAxis type="number" stroke="#55556a" fontSize={10} />
+                <YAxis type="category" dataKey="category" stroke="#55556a" fontSize={9} width={130} tickFormatter={(v) => v.length > 18 ? v.slice(0, 18) + "..." : v} />
+                <Tooltip {...tt} formatter={(value: any) => [`${value}h`, "Avg Time"]} />
+                <Bar dataKey="avg_hours" radius={[0, 4, 4, 0]}>{resolution.slice(0, 10).map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}</Bar>
               </BarChart>
             </ResponsiveContainer>
-          ) : (
-            <p style={{ color: "var(--muted)" }}>No resolution data available</p>
-          )}
+          ) : <p style={{ fontSize: "12px", color: "#55556a" }}>No data</p>}
         </div>
       </div>
 
-      {/* Row 3: Neighborhood Comparison Table */}
-      <div
-        className="rounded-xl border p-5"
-        style={{ background: "var(--card)", borderColor: "var(--border)" }}
-      >
-        <h2 className="text-lg font-semibold mb-4">
-          Neighborhood Comparison (Current vs Previous Period)
-        </h2>
-        {comparison.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr style={{ borderBottom: "1px solid var(--border)" }}>
-                  <th className="text-left p-3">Neighborhood</th>
-                  <th className="text-right p-3">Current Period</th>
-                  <th className="text-right p-3">Previous Period</th>
-                  <th className="text-right p-3">Change</th>
+      {/* Neighborhood Comparison */}
+      <div style={card}>
+        <p style={sectionTitle}>Neighborhood Comparison</p>
+        <div style={{ overflowX: "auto" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px" }}>
+            <thead>
+              <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+                <th style={{ textAlign: "left", padding: "12px 16px", fontWeight: 500, color: "#55556a" }}>Neighborhood</th>
+                <th style={{ textAlign: "right", padding: "12px 16px", fontWeight: 500, color: "#55556a" }}>Current</th>
+                <th style={{ textAlign: "right", padding: "12px 16px", fontWeight: 500, color: "#55556a" }}>Previous</th>
+                <th style={{ textAlign: "right", padding: "12px 16px", fontWeight: 500, color: "#55556a" }}>Change</th>
+              </tr>
+            </thead>
+            <tbody>
+              {comparison.map((r: any) => (
+                <tr key={r.neighborhood_id} style={{ borderBottom: "1px solid rgba(255,255,255,0.04)", transition: "background 0.15s" }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = "rgba(255,255,255,0.02)"}
+                  onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
+                >
+                  <td style={{ padding: "12px 16px", fontWeight: 500 }}>{r.name}</td>
+                  <td style={{ padding: "12px 16px", textAlign: "right" }}>{r.current_count.toLocaleString()}</td>
+                  <td style={{ padding: "12px 16px", textAlign: "right", color: "#55556a" }}>{r.previous_count.toLocaleString()}</td>
+                  <td style={{ padding: "12px 16px", textAlign: "right" }}>
+                    {r.pct_change !== null ? (
+                      <span style={{ color: r.pct_change > 0 ? "#ff6b6b" : r.pct_change < 0 ? "#00b894" : "#55556a", fontWeight: 500 }}>
+                        {r.pct_change > 0 ? "+" : ""}{r.pct_change}%
+                      </span>
+                    ) : <span style={{ color: "#55556a" }}>—</span>}
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {comparison.map((row: any) => (
-                  <tr
-                    key={row.neighborhood_id}
-                    className="hover:bg-white/5 transition-colors"
-                    style={{ borderBottom: "1px solid var(--border)" }}
-                  >
-                    <td className="p-3 font-medium">{row.name}</td>
-                    <td className="p-3 text-right">
-                      {row.current_count.toLocaleString()}
-                    </td>
-                    <td className="p-3 text-right" style={{ color: "var(--muted)" }}>
-                      {row.previous_count.toLocaleString()}
-                    </td>
-                    <td className="p-3 text-right">
-                      {row.pct_change !== null ? (
-                        <span
-                          style={{
-                            color:
-                              row.pct_change > 0
-                                ? "#ef4444"
-                                : row.pct_change < 0
-                                ? "#22c55e"
-                                : "var(--muted)",
-                          }}
-                        >
-                          {row.pct_change > 0 ? "+" : ""}
-                          {row.pct_change}%
-                        </span>
-                      ) : (
-                        <span style={{ color: "var(--muted)" }}>—</span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <p style={{ color: "var(--muted)" }}>No comparison data available</p>
-        )}
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

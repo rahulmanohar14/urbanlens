@@ -1,77 +1,56 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --background: #09090b;
-  --foreground: #fafafa;
-  --card: rgba(24, 24, 27, 0.8);
-  --card-solid: #18181b;
-  --card-hover: #1f1f23;
-  --border: rgba(63, 63, 70, 0.5);
-  --accent: #6366f1;
-  --accent-hover: #4f46e5;
-  --accent-glow: rgba(99, 102, 241, 0.15);
-  --success: #10b981;
-  --warning: #f59e0b;
-  --danger: #ef4444;
-  --muted: #71717a;
-  --muted-foreground: #a1a1aa;
+  --bg: #0a0a0f;
+  --surface: #12121a;
+  --surface-2: #1a1a25;
+  --border: rgba(255, 255, 255, 0.07);
+  --text: #eeeef0;
+  --text-2: #9898a6;
+  --text-3: #55556a;
+  --accent: #6c5ce7;
+  --accent-light: rgba(108, 92, 231, 0.15);
+  --green: #00b894;
+  --green-light: rgba(0, 184, 148, 0.12);
+  --red: #ff6b6b;
+  --red-light: rgba(255, 107, 107, 0.12);
+  --amber: #fdcb6e;
+  --amber-light: rgba(253, 203, 110, 0.12);
 }
 
-* {
-  scrollbar-width: thin;
-  scrollbar-color: #27272a transparent;
-}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+*::-webkit-scrollbar { width: 4px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb { background: var(--surface-2); border-radius: 10px; }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
 
-.leaflet-container {
-  height: 100%;
-  width: 100%;
-  border-radius: 0.75rem;
-}
+/* Leaflet dark theme */
+.leaflet-container { height: 100%; width: 100%; background: #0d0d15 !important; }
+.leaflet-control-zoom { border: none !important; box-shadow: none !important; }
+.leaflet-control-zoom a { background: var(--surface) !important; color: var(--text-2) !important; border: 1px solid var(--border) !important; width: 28px !important; height: 28px !important; line-height: 28px !important; font-size: 14px !important; }
+.leaflet-control-zoom a:first-child { border-radius: 8px 8px 0 0 !important; }
+.leaflet-control-zoom a:last-child { border-radius: 0 0 8px 8px !important; }
+.leaflet-control-attribution { background: rgba(10,10,15,0.85) !important; color: var(--text-3) !important; font-size: 8px !important; padding: 2px 6px !important; }
+.leaflet-popup-content-wrapper { background: var(--surface) !important; color: var(--text) !important; border-radius: 12px !important; border: 1px solid var(--border) !important; box-shadow: 0 16px 48px rgba(0,0,0,0.6) !important; font-family: 'Inter', sans-serif !important; font-size: 12px !important; }
+.leaflet-popup-tip { background: var(--surface) !important; }
+.leaflet-tooltip { background: var(--surface) !important; color: var(--text) !important; border: 1px solid var(--border) !important; border-radius: 8px !important; box-shadow: 0 8px 24px rgba(0,0,0,0.4) !important; font-family: 'Inter', sans-serif !important; padding: 8px 12px !important; }
 
-.glass {
-  background: var(--card);
-  backdrop-filter: blur(12px);
-  border: 1px solid var(--border);
-}
-
-.glow-border {
-  box-shadow: 0 0 0 1px var(--border), 0 0 20px -5px var(--accent-glow);
-}
-
-.stat-card {
-  position: relative;
-  overflow: hidden;
-}
-
-.stat-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, var(--accent), transparent);
-  opacity: 0;
-  transition: opacity 0.3s;
-}
-
-.stat-card:hover::before {
-  opacity: 1;
-}
-
-.fade-in {
-  animation: fadeIn 0.5s ease-out;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
-}
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes pulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 0.8; } }
+.anim-fade { animation: fadeIn 0.35s ease-out forwards; }
+.anim-delay-1 { animation-delay: 50ms; opacity: 0; }
+.anim-delay-2 { animation-delay: 100ms; opacity: 0; }
+.anim-delay-3 { animation-delay: 150ms; opacity: 0; }
+.anim-delay-4 { animation-delay: 200ms; opacity: 0; }
+.skel { background: var(--surface-2); animation: pulse 1.5s infinite; border-radius: 6px; }

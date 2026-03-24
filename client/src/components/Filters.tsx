@@ -12,37 +12,28 @@ export default function Filters({ onCategoryChange, selectedCategory }: Props) {
   const [categories, setCategories] = useState<{ category: string; count: number }[]>([]);
 
   useEffect(() => {
-    getIncidentCategories()
-      .then((res) => setCategories(res.data))
-      .catch((err) => console.error("Failed to load categories:", err));
+    getIncidentCategories().then((r) => setCategories(r.data)).catch(console.error);
   }, []);
 
+  const btnStyle = (active: boolean) => ({
+    padding: "6px 14px",
+    borderRadius: "20px",
+    fontSize: "11px",
+    fontWeight: active ? 600 : 400,
+    background: active ? "#6c5ce7" : "transparent",
+    color: active ? "#fff" : "#9898a6",
+    border: active ? "1px solid #6c5ce7" : "1px solid rgba(255,255,255,0.08)",
+    cursor: "pointer",
+    transition: "all 0.2s",
+    whiteSpace: "nowrap" as const,
+  });
+
   return (
-    <div className="flex items-center gap-2 mb-4 flex-wrap">
-      <span className="text-xs font-medium uppercase tracking-wide mr-1" style={{ color: "var(--muted)" }}>Filter</span>
-      <button
-        onClick={() => onCategoryChange(null)}
-        className="text-xs px-3 py-1.5 rounded-md transition-all duration-200"
-        style={{
-          background: selectedCategory === null ? "var(--accent)" : "transparent",
-          color: selectedCategory === null ? "#fff" : "var(--muted-foreground)",
-          border: `1px solid ${selectedCategory === null ? "var(--accent)" : "var(--border)"}`,
-        }}
-      >
-        All
-      </button>
-      {categories.slice(0, 8).map((cat) => (
-        <button
-          key={cat.category}
-          onClick={() => onCategoryChange(cat.category)}
-          className="text-xs px-3 py-1.5 rounded-md transition-all duration-200"
-          style={{
-            background: selectedCategory === cat.category ? "var(--accent)" : "transparent",
-            color: selectedCategory === cat.category ? "#fff" : "var(--muted-foreground)",
-            border: `1px solid ${selectedCategory === cat.category ? "var(--accent)" : "var(--border)"}`,
-          }}
-        >
-          {cat.category}
+    <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px", overflowX: "auto", paddingBottom: "4px" }}>
+      <button onClick={() => onCategoryChange(null)} style={btnStyle(!selectedCategory)}>All</button>
+      {categories.slice(0, 8).map((c) => (
+        <button key={c.category} onClick={() => onCategoryChange(c.category)} style={btnStyle(selectedCategory === c.category)}>
+          {c.category}
         </button>
       ))}
     </div>

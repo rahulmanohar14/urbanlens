@@ -16,37 +16,45 @@ export default function StatsCards() {
   const [data, setData] = useState<Summary | null>(null);
 
   useEffect(() => {
-    getSummary()
-      .then((res) => setData(res.data))
-      .catch((err) => console.error("Failed to load summary:", err));
+    getSummary().then((r) => setData(r.data)).catch(console.error);
   }, []);
 
   if (!data) {
     return (
-      <div className="grid grid-cols-4 gap-3">
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "12px" }}>
         {[...Array(4)].map((_, i) => (
-          <div key={i} className="glass rounded-xl p-5 animate-pulse">
-            <div className="h-3 w-20 rounded mb-3" style={{ background: "var(--border)" }} />
-            <div className="h-7 w-14 rounded" style={{ background: "var(--border)" }} />
-          </div>
+          <div key={i} style={{ background: "#12121a", borderRadius: "12px", padding: "20px", height: "90px" }} />
         ))}
       </div>
     );
   }
 
   const cards = [
-    { label: "Total Incidents", value: data.total_incidents.toLocaleString(), change: null, color: "#6366f1" },
-    { label: "Open Cases", value: data.open_incidents.toLocaleString(), change: null, color: "#ef4444" },
-    { label: "Avg Resolution", value: `${data.avg_resolution_hours}h`, change: null, color: "#f59e0b" },
-    { label: "Neighborhoods", value: "26", change: null, color: "#10b981" },
+    { label: "Total Incidents", value: data.total_incidents.toLocaleString(), dot: "#6c5ce7" },
+    { label: "Open Cases", value: data.open_incidents.toLocaleString(), dot: "#ff6b6b" },
+    { label: "Avg Resolution", value: `${data.avg_resolution_hours}h`, dot: "#fdcb6e" },
+    { label: "Neighborhoods", value: "26", dot: "#00b894" },
   ];
 
   return (
-    <div className="grid grid-cols-4 gap-3 fade-in">
-      {cards.map((card) => (
-        <div key={card.label} className="stat-card glass rounded-xl p-5 transition-all duration-200 hover:bg-white/[0.03]">
-          <p className="text-xs font-medium tracking-wide uppercase mb-2" style={{ color: "var(--muted)" }}>{card.label}</p>
-          <p className="text-2xl font-semibold tracking-tight" style={{ color: card.color }}>{card.value}</p>
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "12px" }}>
+      {cards.map((c) => (
+        <div key={c.label} style={{
+          background: "#12121a",
+          border: "1px solid rgba(255,255,255,0.06)",
+          borderRadius: "12px",
+          padding: "20px",
+          transition: "border-color 0.2s",
+          cursor: "default",
+        }}
+          onMouseEnter={(e) => e.currentTarget.style.borderColor = c.dot}
+          onMouseLeave={(e) => e.currentTarget.style.borderColor = "rgba(255,255,255,0.06)"}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "10px" }}>
+            <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: c.dot }} />
+            <span style={{ fontSize: "11px", fontWeight: 500, color: "#55556a", textTransform: "uppercase", letterSpacing: "0.5px" }}>{c.label}</span>
+          </div>
+          <p style={{ fontSize: "22px", fontWeight: 600, letterSpacing: "-0.5px" }}>{c.value}</p>
         </div>
       ))}
     </div>
