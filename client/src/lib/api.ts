@@ -41,6 +41,12 @@ export const getTrends = (params?: Record<string, any>) =>
 export const getComparison = (params?: Record<string, any>) =>
   api.get("/analytics/comparison", { params });
 
+export const getTimePatterns = () =>
+  api.get("/analytics/time-patterns");
+
+export const getTopStreets = (source?: string) =>
+  api.get("/analytics/top-streets", { params: source ? { source } : {} });
+
 export const getResolutionTimes = () =>
   api.get("/analytics/resolution-time");
 

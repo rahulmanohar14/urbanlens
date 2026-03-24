@@ -154,7 +154,8 @@ class AnalyticsService:
                     EXTRACT(EPOCH FROM (closed_dt - open_dt)) / 3600
                 )::numeric, 1)
                 FROM incidents WHERE closed_dt IS NOT NULL
-                AND closed_dt > open_dt)::float AS avg_resolution_hours
+                AND closed_dt > open_dt)::float AS avg_resolution_hours,
+                (SELECT COUNT(*) FROM crimes WHERE shooting = true)::int AS total_shootings
         """)
         result = await self.db.execute(stats_query)
         stats = dict(result.fetchone()._mapping)

@@ -8,6 +8,7 @@ interface Summary {
   total_crimes: number;
   open_incidents: number;
   avg_resolution_hours: number;
+  total_shootings: number;
   top_categories: { category: string; count: number }[];
   top_neighborhoods: { name: string; count: number }[];
 }
@@ -31,9 +32,9 @@ export default function StatsCards() {
 
   const cards = [
     { label: "Total Incidents", value: data.total_incidents.toLocaleString(), dot: "#6c5ce7" },
-    { label: "Open Cases", value: data.open_incidents.toLocaleString(), dot: "#ff6b6b" },
-    { label: "Avg Resolution", value: `${data.avg_resolution_hours}h`, dot: "#fdcb6e" },
     { label: "Total Crimes", value: data.total_crimes.toLocaleString(), dot: "#ff6b6b" },
+    { label: "Neighborhoods", value: "26", dot: "#00b894" },
+    { label: "Shootings", value: (data.total_shootings || 0).toLocaleString(), dot: "#fdcb6e" },
   ];
 
   return (
