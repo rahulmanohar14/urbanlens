@@ -15,70 +15,114 @@ except ImportError:
 
 
 class PredictionService:
-    """ML prediction service: Holt-Winters Exponential Smoothing forecasting."""
 
     def __init__(self, db: AsyncSession):
         self.db = db
 
     async def forecast_incidents(
         self,
-        neighborhood_id: int,
+        neighborhood_id: Optional[int] = None,
         days_ahead: int = 30,
         category: Optional[str] = None,
+        aggregation: str = "daily",
     ) -> dict:
-        """Run Holt-Winters forecast on historical incident data."""
+        """Run Holt-Winters forecast. If neighborhood_id is None, forecasts city-wide."""
 
         if not STATS_AVAILABLE:
             return {"error": "statsmodels is not installed. Run: pip install statsmodels"}
 
-        extra_filter = "AND category = :category" if category else ""
-        params = {"nid": neighborhood_id}
+        # Build query based on whether city-wide or per-neighborhood
+        filters = []
+        params = {}
+
+        if neighborhood_id is not None:
+            filters.append("neighborhood_id = :nid")
+            params["nid"] = neighborhood_id
+
         if category:
+            filters.append("category = :category")
             params["category"] = category
 
-        query = text(f"""
-            SELECT
-                incident_date AS ds,
-                SUM(incident_count)::int AS y
-            FROM mv_daily_incident_counts
-            WHERE neighborhood_id = :nid
-            {extra_filter}
-            GROUP BY incident_date
-            ORDER BY incident_date
-        """)
+        where_sql = "WHERE " + " AND ".join(filters) if filters else ""
+
+        if aggregation == "weekly":
+            query = text(f"""
+                SELECT
+                    DATE_TRUNC('week', incident_date)::date AS ds,
+                    SUM(incident_count)::int AS y
+                FROM mv_daily_incident_counts
+                {where_sql}
+                GROUP BY DATE_TRUNC('week', incident_date)
+                ORDER BY ds
+            """)
+        else:
+            query = text(f"""
+                SELECT
+                    incident_date AS ds,
+                    SUM(incident_count)::int AS y
+                FROM mv_daily_incident_counts
+                {where_sql}
+                GROUP BY incident_date
+                ORDER BY incident_date
+            """)
 
         result = await self.db.execute(query, params)
         rows = result.fetchall()
 
-        if len(rows) < 30:
-            return {"error": f"Not enough data for forecasting (need 30+ days, got {len(rows)})"}
+        min_rows = 14 if aggregation == "weekly" else 30
+        if len(rows) < min_rows:
+            return {"error": f"Not enough data for forecasting (need {min_rows}+ data points, got {len(rows)})"}
 
         # Build dataframe
         df = pd.DataFrame([{"ds": r[0], "y": float(r[1])} for r in rows])
         df["ds"] = pd.to_datetime(df["ds"])
-        df = df.set_index("ds").asfreq("D", fill_value=0)
 
-        # Train Holt-Winters Exponential Smoothing
+        freq = "W" if aggregation == "weekly" else "D"
+        df = df.set_index("ds").asfreq(freq, fill_value=0)
+
+        # Determine seasonal period
+        seasonal_period = 52 if aggregation == "weekly" and len(df) > 104 else 7 if aggregation == "daily" else None
+
+        # Train model
         try:
-            model = ExponentialSmoothing(
-                df["y"],
-                seasonal_periods=7,
-                trend="add",
-                seasonal="add",
-                initialization_method="estimated",
-            ).fit(optimized=True)
+            # Use only last 180 days of data to avoid early sparse periods
+            if len(df) > 180:
+                df = df.tail(180)
 
-            # Generate forecast
-            forecast_values = model.forecast(days_ahead)
+            # Remove trailing zeros (incomplete data at end)
+            while len(df) > 30 and df["y"].iloc[-1] == 0:
+                df = df.iloc[:-1]
 
-            # Calculate confidence intervals (using residual std)
+            if seasonal_period and len(df) >= seasonal_period * 2:
+                model = ExponentialSmoothing(
+                    df["y"],
+                    seasonal_periods=seasonal_period,
+                    trend="add",
+                    seasonal="add",
+                    damped_trend=True,
+                    initialization_method="estimated",
+                ).fit(optimized=True)
+            else:
+                model = ExponentialSmoothing(
+                    df["y"],
+                    trend="add",
+                    damped_trend=True,
+                    seasonal=None,
+                    initialization_method="estimated",
+                ).fit(optimized=True)
+
+            forecast_periods = days_ahead if aggregation == "daily" else max(4, days_ahead // 7)
+            forecast_values = model.forecast(forecast_periods)
+
             residuals = model.resid
             std = residuals.std()
 
             last_date = df.index[-1]
+            step = timedelta(weeks=1) if aggregation == "weekly" else timedelta(days=1)
+
             forecast_points = []
             for i, val in enumerate(forecast_values):
-                date = last_date + timedelta(days=i + 1)
+                date = last_date + step * (i + 1)
                 predicted = max(0, round(float(val), 2))
                 forecast_points.append({
                     "date": date.strftime("%Y-%m-%d"),
@@ -88,13 +132,17 @@ class PredictionService:
                 })
 
         except Exception as e:
-            # Fallback: simple moving average if Holt-Winters fails
-            recent = df["y"].tail(14).mean()
-            std = df["y"].tail(14).std()
+            # Fallback: simple moving average
+            window = 4 if aggregation == "weekly" else 14
+            recent = df["y"].tail(window).mean()
+            std = df["y"].tail(window).std()
             last_date = df.index[-1]
+            step = timedelta(weeks=1) if aggregation == "weekly" else timedelta(days=1)
+            forecast_periods = days_ahead if aggregation == "daily" else max(4, days_ahead // 7)
+
             forecast_points = []
-            for i in range(days_ahead):
-                date = last_date + timedelta(days=i + 1)
+            for i in range(forecast_periods):
+                date = last_date + step * (i + 1)
                 forecast_points.append({
                     "date": date.strftime("%Y-%m-%d"),
                     "predicted": round(max(0, float(recent)), 2),
@@ -102,10 +150,11 @@ class PredictionService:
                     "upper_bound": round(float(recent + 1.28 * std), 2),
                 })
 
-        # Historical for context (last 90 days)
+        # Historical for context
+        tail_size = 52 if aggregation == "weekly" else 90
         historical = [
             {"date": idx.strftime("%Y-%m-%d"), "count": int(row["y"])}
-            for idx, row in df.tail(90).iterrows()
+            for idx, row in df.tail(tail_size).iterrows()
         ]
 
         return {"forecast": forecast_points, "historical": historical}
