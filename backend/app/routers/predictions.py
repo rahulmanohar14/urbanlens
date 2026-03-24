@@ -35,3 +35,24 @@ async def run_forecast(
 @router.get("/")
 async def predictions_status():
     return {"status": "Predictions endpoint ready"}
+
+@router.post("/ingest")
+async def trigger_ingestion():
+    """Manually trigger a 311 data ingestion via Celery."""
+    try:
+        from app.tasks.ingest_tasks import ingest_311_task
+        task = ingest_311_task.delay(2000)
+        return {"status": "queued", "task_id": str(task.id)}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+
+@router.post("/refresh-views")
+async def trigger_refresh():
+    """Manually trigger materialized view refresh via Celery."""
+    try:
+        from app.tasks.ingest_tasks import refresh_views_task
+        task = refresh_views_task.delay()
+        return {"status": "queued", "task_id": str(task.id)}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
