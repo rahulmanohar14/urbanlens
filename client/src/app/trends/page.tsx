@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Cell } from "recharts";
-import { getTrends, getCategoryBreakdown, getResolutionTimes, getComparison, getNeighborhoods } from "@/lib/api";
+import { getTrends, getCategoryBreakdown, getResolutionTimes, getComparison, getNeighborhoods, getCrimesByOffense } from "@/lib/api";
 
 const COLORS = ["#6c5ce7", "#ff6b6b", "#00b894", "#fdcb6e", "#a29bfe", "#fd79a8", "#00cec9", "#e17055", "#55efc4", "#74b9ff"];
 const card = { background: "#12121a", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "12px", padding: "24px" };
@@ -15,12 +15,13 @@ export default function TrendsPage() {
   const [resolution, setResolution] = useState<any[]>([]);
   const [comparison, setComparison] = useState<any[]>([]);
   const [hoods, setHoods] = useState<any[]>([]);
+  const [crimeOffenses, setCrimeOffenses] = useState<any[]>([]);
   const [selHood, setSelHood] = useState("");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([getTrends({ days: 365 }), getCategoryBreakdown({ days: 365 }), getResolutionTimes(), getComparison({ days: 365 }), getNeighborhoods()])
-      .then(([t, c, r, comp, h]) => { setTrends(t.data.data || []); setCategories(c.data || []); setResolution(r.data || []); setComparison(comp.data || []); setHoods(h.data || []); setLoading(false); })
+    Promise.all([getTrends({ days: 365 }), getCategoryBreakdown({ days: 365 }), getResolutionTimes(), getComparison({ days: 365 }), getNeighborhoods(), getCrimesByOffense()])
+      .then(([t, c, r, comp, h, crimes]) => { setTrends(t.data.data || []); setCategories(c.data || []); setResolution(r.data || []); setComparison(comp.data || []); setHoods(h.data || []); setCrimeOffenses(crimes.data || []); setLoading(false); })
       .catch(() => setLoading(false));
   }, []);
 
@@ -42,7 +43,6 @@ export default function TrendsPage() {
 
   return (
     <div style={{ maxWidth: "1400px", margin: "0 auto", padding: "24px" }}>
-      {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "24px", flexWrap: "wrap", gap: "16px" }}>
         <div>
           <h1 style={{ fontSize: "20px", fontWeight: 600, letterSpacing: "-0.3px" }}>Analytics</h1>
@@ -54,7 +54,7 @@ export default function TrendsPage() {
         </select>
       </div>
 
-      {/* Trends Chart */}
+      {/* Trends */}
       <div style={{ ...card, marginBottom: "16px" }}>
         <p style={sectionTitle}>Incident Trends</p>
         {trends.length > 0 ? (
@@ -71,10 +71,10 @@ export default function TrendsPage() {
         ) : <p style={{ fontSize: "12px", color: "#55556a" }}>No data available</p>}
       </div>
 
-      {/* Category + Resolution */}
+      {/* Category + Crimes by Offense */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "16px" }}>
         <div style={card}>
-          <p style={sectionTitle}>By Category</p>
+          <p style={sectionTitle}>311 Incidents by Category</p>
           {categories.length > 0 ? (
             <ResponsiveContainer width="100%" height={320}>
               <BarChart data={categories.slice(0, 10)} layout="vertical">
@@ -89,19 +89,35 @@ export default function TrendsPage() {
         </div>
 
         <div style={card}>
-          <p style={sectionTitle}>Resolution Time (hours)</p>
-          {resolution.length > 0 ? (
+          <p style={sectionTitle}>Crimes by Offense Type</p>
+          {crimeOffenses.length > 0 ? (
             <ResponsiveContainer width="100%" height={320}>
-              <BarChart data={resolution.slice(0, 10)} layout="vertical">
+              <BarChart data={crimeOffenses.slice(0, 10)} layout="vertical">
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
                 <XAxis type="number" stroke="#55556a" fontSize={10} />
-                <YAxis type="category" dataKey="category" stroke="#55556a" fontSize={9} width={130} tickFormatter={(v) => v.length > 18 ? v.slice(0, 18) + "..." : v} />
-                <Tooltip {...tt} formatter={(value: any) => [`${value}h`, "Avg Time"]} />
-                <Bar dataKey="avg_hours" radius={[0, 4, 4, 0]}>{resolution.slice(0, 10).map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}</Bar>
+                <YAxis type="category" dataKey="offense_description" stroke="#55556a" fontSize={9} width={130} tickFormatter={(v) => v.length > 18 ? v.slice(0, 18) + "..." : v} />
+                <Tooltip {...tt} />
+                <Bar dataKey="count" radius={[0, 4, 4, 0]}>{crimeOffenses.slice(0, 10).map((_, i) => <Cell key={i} fill={["#ff6b6b", "#e17055", "#fd79a8", "#d63031", "#ff7675", "#fab1a0", "#e55039", "#eb4d4b", "#f19066", "#ea8685"][i % 10]} />)}</Bar>
               </BarChart>
             </ResponsiveContainer>
-          ) : <p style={{ fontSize: "12px", color: "#55556a" }}>No data</p>}
+          ) : <p style={{ fontSize: "12px", color: "#55556a" }}>No crime data</p>}
         </div>
+      </div>
+
+      {/* Resolution Time */}
+      <div style={{ ...card, marginBottom: "16px" }}>
+        <p style={sectionTitle}>Resolution Time (hours)</p>
+        {resolution.length > 0 ? (
+          <ResponsiveContainer width="100%" height={320}>
+            <BarChart data={resolution.slice(0, 10)} layout="vertical">
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
+              <XAxis type="number" stroke="#55556a" fontSize={10} />
+              <YAxis type="category" dataKey="category" stroke="#55556a" fontSize={9} width={130} tickFormatter={(v) => v.length > 18 ? v.slice(0, 18) + "..." : v} />
+              <Tooltip {...tt} formatter={(value: any) => [`${value}h`, "Avg Time"]} />
+              <Bar dataKey="avg_hours" radius={[0, 4, 4, 0]}>{resolution.slice(0, 10).map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}</Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        ) : <p style={{ fontSize: "12px", color: "#55556a" }}>No data</p>}
       </div>
 
       {/* Neighborhood Comparison */}

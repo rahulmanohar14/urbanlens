@@ -17,6 +17,12 @@ export const getIncidentCategories = () =>
 export const getHeatmapData = (params?: Record<string, any>) =>
   api.get("/incidents/heatmap", { params });
 
+export const getCrimesNearby = (lat: number, lng: number, radius: number = 500) =>
+  api.get("/crimes/nearby", { params: { lat, lng, radius } });
+
+export const getCrimesByOffense = () =>
+  api.get("/crimes/by-offense");
+
 export const getNeighborhoods = () =>
   api.get("/neighborhoods/");
 

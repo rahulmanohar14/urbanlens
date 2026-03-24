@@ -1,52 +1,92 @@
 "use client";
 
-interface Incident {
+interface NearbyItem {
   id: number;
+  type: "incident" | "crime";
   category: string;
   status: string;
   street_address: string;
   distance_meters?: number;
-  open_dt: string;
+  open_dt?: string;
+  occurred_on?: string;
 }
 
 interface Props {
-  incidents: Incident[];
+  incidents: NearbyItem[];
+}
+
+function formatDate(dateStr?: string): string {
+  if (!dateStr) return "";
+  try {
+    const d = new Date(dateStr);
+    return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  } catch {
+    return "";
+  }
 }
 
 export default function IncidentList({ incidents }: Props) {
   if (incidents.length === 0) {
     return (
-      <div className="h-full rounded-xl border flex flex-col items-center justify-center p-6 text-center" style={{ background: "var(--surface)", borderColor: "var(--border)" }}>
-        <div className="w-10 h-10 rounded-full flex items-center justify-center mb-3" style={{ background: "var(--accent-light)" }}>
-          <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} style={{ color: "var(--accent)" }}><path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" /></svg>
-        </div>
-        <p className="text-sm font-medium mb-1">Radius Search</p>
-        <p className="text-[11px] leading-relaxed max-w-[200px]" style={{ color: "var(--text-3)" }}>Click anywhere on the map to discover nearby incidents</p>
+      <div style={{ height: "100%", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.06)", background: "#12121a", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px", textAlign: "center" }}>
+        <div style={{ width: "48px", height: "48px", borderRadius: "50%", background: "rgba(108,92,231,0.1)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "12px", fontSize: "18px", color: "#6c5ce7" }}>{"◎"}</div>
+        <p style={{ fontSize: "13px", fontWeight: 500, marginBottom: "4px" }}>Radius Search</p>
+        <p style={{ fontSize: "11px", color: "#55556a", maxWidth: "200px" }}>Click anywhere on the map to discover nearby incidents and crimes</p>
       </div>
     );
   }
 
+  const crimeCount = incidents.filter((i) => i.type === "crime").length;
+  const incidentCount = incidents.filter((i) => i.type === "incident").length;
+
   return (
-    <div className="h-full rounded-xl border overflow-hidden flex flex-col" style={{ background: "var(--surface)", borderColor: "var(--border)" }}>
-      <div className="px-4 py-3 border-b flex items-center justify-between shrink-0" style={{ borderColor: "var(--border)" }}>
-        <span className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-3)" }}>Nearby</span>
-        <span className="text-[11px] font-medium px-2 py-0.5 rounded-full" style={{ background: "var(--accent-light)", color: "var(--accent)" }}>{incidents.length} found</span>
+    <div style={{ height: "100%", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.06)", background: "#12121a", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+      <div style={{ padding: "12px 16px", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
+        <span style={{ fontSize: "11px", fontWeight: 600, color: "#55556a", textTransform: "uppercase", letterSpacing: "0.5px" }}>Nearby</span>
+        <div style={{ display: "flex", gap: "6px" }}>
+          {incidentCount > 0 && (
+            <span style={{ fontSize: "10px", fontWeight: 500, padding: "2px 8px", borderRadius: "10px", background: "rgba(108,92,231,0.12)", color: "#a29bfe" }}>{incidentCount} 311</span>
+          )}
+          {crimeCount > 0 && (
+            <span style={{ fontSize: "10px", fontWeight: 500, padding: "2px 8px", borderRadius: "10px", background: "rgba(255,107,107,0.12)", color: "#ff6b6b" }}>{crimeCount} crimes</span>
+          )}
+        </div>
       </div>
-      <div className="flex-1 overflow-y-auto">
-        {incidents.map((inc, i) => (
-          <div key={inc.id} className="px-4 py-3 border-b transition-colors hover:bg-white/[0.02] anim-fade" style={{ borderColor: "var(--border)", animationDelay: `${i * 15}ms` }}>
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0 flex-1">
-                <p className="text-[12px] font-medium truncate">{inc.category}</p>
-                <p className="text-[11px] truncate mt-0.5" style={{ color: "var(--text-3)" }}>{inc.street_address || "Unknown location"}</p>
-              </div>
-              <div className="flex flex-col items-end gap-1 shrink-0">
-                <span className="text-[10px] font-medium px-1.5 py-0.5 rounded" style={{ background: inc.status === "Open" ? "var(--red-light)" : "var(--green-light)", color: inc.status === "Open" ? "var(--red)" : "var(--green)" }}>{inc.status}</span>
-                {inc.distance_meters && <span className="text-[10px]" style={{ color: "var(--text-3)" }}>{inc.distance_meters}m</span>}
+      <div style={{ flex: 1, overflowY: "auto" }}>
+        {incidents.map((inc, i) => {
+          const dateStr = inc.type === "incident" ? formatDate(inc.open_dt) : formatDate(inc.occurred_on);
+          return (
+            <div key={`${inc.type}-${inc.id}-${i}`} style={{ padding: "12px 16px", borderBottom: "1px solid rgba(255,255,255,0.04)", transition: "background 0.15s", cursor: "default" }}
+              onMouseEnter={(e) => e.currentTarget.style.background = "rgba(255,255,255,0.02)"}
+              onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
+            >
+              <div style={{ display: "flex", alignItems: "start", justifyContent: "space-between", gap: "12px" }}>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "2px" }}>
+                    <span style={{
+                      fontSize: "9px", fontWeight: 600, padding: "1px 5px", borderRadius: "3px",
+                      background: inc.type === "crime" ? "rgba(255,107,107,0.12)" : "rgba(108,92,231,0.12)",
+                      color: inc.type === "crime" ? "#ff6b6b" : "#a29bfe",
+                    }}>
+                      {inc.type === "crime" ? "CRIME" : "311"}
+                    </span>
+                    <span style={{ fontSize: "12px", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{inc.category}</span>
+                  </div>
+                  <p style={{ fontSize: "11px", color: "#55556a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{inc.street_address || "Unknown location"}</p>
+                  {dateStr && <p style={{ fontSize: "10px", color: "#44445a", marginTop: "2px" }}>{dateStr}</p>}
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "4px", flexShrink: 0 }}>
+                  <span style={{
+                    fontSize: "10px", fontWeight: 500, padding: "2px 6px", borderRadius: "4px",
+                    background: inc.status === "Open" || inc.status === "Shooting" ? "rgba(255,107,107,0.1)" : "rgba(0,184,148,0.1)",
+                    color: inc.status === "Open" || inc.status === "Shooting" ? "#ff6b6b" : "#00b894",
+                  }}>{inc.status}</span>
+                  {inc.distance_meters && <span style={{ fontSize: "10px", color: "#55556a" }}>{inc.distance_meters}m</span>}
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

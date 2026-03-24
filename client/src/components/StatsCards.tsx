@@ -33,7 +33,7 @@ export default function StatsCards() {
     { label: "Total Incidents", value: data.total_incidents.toLocaleString(), dot: "#6c5ce7" },
     { label: "Open Cases", value: data.open_incidents.toLocaleString(), dot: "#ff6b6b" },
     { label: "Avg Resolution", value: `${data.avg_resolution_hours}h`, dot: "#fdcb6e" },
-    { label: "Neighborhoods", value: "26", dot: "#00b894" },
+    { label: "Total Crimes", value: data.total_crimes.toLocaleString(), dot: "#ff6b6b" },
   ];
 
   return (
