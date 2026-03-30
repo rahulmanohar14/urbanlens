@@ -1,8 +1,7 @@
 # UrbanLens
 
-**[Live Demo](https://urbanlens-app.vercel.app)** 
-**[API Docs](https://urbanlens-api.onrender.com/docs)**
-**[GitHub](https://github.com/rahulmanohar14/urbanlens)**
+**[Live Demo](https://urbanlens-app.vercel.app)** · **[API Docs](https://urbanlens-api.onrender.com/docs)**
+
 
 **Real-time geospatial analytics platform for Boston city data — 19,000+ incidents and crime reports.**
 
