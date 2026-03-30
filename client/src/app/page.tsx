@@ -73,9 +73,9 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "16px" }}>
+      <div className="layout-map-sidebar" style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "16px" }}>
         <div>
-          <div style={{ height: "540px", borderRadius: "12px", overflow: "hidden", border: "1px solid rgba(255,255,255,0.06)" }}>
+          <div className="map-container" style={{ height: "540px", borderRadius: "12px", overflow: "hidden", border: "1px solid rgba(255,255,255,0.06)" }}>
             <Map mode={mapMode} onNearbySearch={setNearbyItems} onNeighborhoodClick={(name) => setSelectedNeighborhood(name)} />
           </div>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "8px", padding: "0 4px" }}>
@@ -95,7 +95,7 @@ export default function Dashboard() {
             {selectedNeighborhood && <p style={{ fontSize: "11px", color: "#55556a" }}>Selected: <span style={{ color: "#6c5ce7" }}>{selectedNeighborhood}</span></p>}
           </div>
         </div>
-        <div style={{ height: "540px" }}>
+        <div className="sidebar-container" style={{ height: "540px" }}>
           <IncidentList incidents={filtered} />
         </div>
       </div>

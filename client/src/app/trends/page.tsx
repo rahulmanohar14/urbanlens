@@ -164,7 +164,7 @@ export default function TrendsPage() {
       </div>
 
       {/* Category + Crimes by Offense */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "16px" }}>
+      <div className="layout-two-col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "16px" }}>
         <div style={card}>
           <p style={sectionTitle}>311 Incidents by Category</p>
           {categories.length > 0 ? (
@@ -197,7 +197,7 @@ export default function TrendsPage() {
       </div>
 
       {/* Top Streets */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "16px" }}>
+      <div className="layout-two-col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "16px" }}>
         <div style={card}>
           <p style={sectionTitle}>Top Streets — 311 Incidents</p>
           {(topStreets.incidents || []).length > 0 ? (

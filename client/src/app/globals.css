@@ -55,80 +55,90 @@ body {
 .anim-delay-4 { animation-delay: 200ms; opacity: 0; }
 .skel { background: var(--surface-2); animation: pulse 1.5s infinite; border-radius: 6px; }
 
-/* Mobile Responsive - CSS only, no component changes */
-@media (max-width: 768px) {
-  /* Stack the map + sidebar vertically */
-  div[style*="grid-template-columns: 2fr 1fr"] {
+/* Mobile Responsive */
+@media (max-width: 1024px) {
+  .layout-map-sidebar {
     display: flex !important;
     flex-direction: column !important;
   }
-
-  /* Reduce map height on mobile */
-  div[style*="height: 540px"] {
+  .layout-map-sidebar > div {
+    height: auto !important;
+  }
+  .layout-map-sidebar .map-container {
+    height: 400px !important;
+  }
+  .layout-map-sidebar .sidebar-container {
     height: 350px !important;
   }
-
-  /* Stack two-column grids */
-  div[style*="grid-template-columns: 1fr 1fr"] {
+  .layout-two-col {
     display: flex !important;
     flex-direction: column !important;
   }
-
-  /* Stack three-column grids */
-  div[style*="grid-template-columns: 1fr 1fr 1fr"] {
+  .layout-three-col {
     display: flex !important;
     flex-direction: column !important;
   }
-
-  /* Stats cards - 2 columns */
-  div[style*="grid-template-columns: repeat(4"] {
+  .layout-stats {
     grid-template-columns: repeat(2, 1fr) !important;
     gap: 8px !important;
   }
+}
 
-  /* Reduce padding */
-  div[style*="padding: 24px"] {
-    padding: 14px !important;
-  }
-
-  /* Filter pills scroll horizontally */
-  div[style*="overflowX: auto"],
-  div[style*="overflow-x: auto"] {
-    -webkit-overflow-scrolling: touch;
-  }
-
-  /* Navbar - hide desktop nav on very small screens */
-  nav[style*="rgba(255,255,255,0.03)"] {
+@media (max-width: 768px) {
+  .topbar-nav {
     display: none !important;
   }
-
-  /* Table font size */
-  table {
-    font-size: 11px !important;
+  .topbar-github {
+    display: none !important;
   }
-
-  td, th {
+  .topbar-mobile-links {
+    display: flex !important;
+  }
+  .page-container {
+    padding: 16px !important;
+  }
+  .map-container {
+    height: 320px !important;
+  }
+  .sidebar-container {
+    height: 300px !important;
+  }
+  .filter-row {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+  }
+  .legend-row {
+    flex-wrap: wrap;
+  }
+  .legend-extra {
+    display: none !important;
+  }
+  table td, table th {
     padding: 8px 10px !important;
-  }
-
-  /* Heatmap scroll hint */
-  div[style*="minWidth: 700px"],
-  div[style*="min-width: 700px"] {
-    min-width: 600px !important;
+    font-size: 11px !important;
   }
 }
 
 @media (max-width: 480px) {
-  /* Extra small screens */
-  div[style*="height: 350px"] {
-    height: 280px !important;
-  }
-
-  div[style*="grid-template-columns: repeat(2"] {
+  .layout-stats {
+    grid-template-columns: 1fr 1fr !important;
     gap: 6px !important;
   }
+  .map-container {
+    height: 260px !important;
+  }
+  .page-container {
+    padding: 12px !important;
+  }
+}
 
-  div[style*="padding: 14px"] {
-    padding: 10px !important;
+/* Mobile menu button - hidden by default, shown on mobile */
+.topbar-menu-btn {
+  display: none !important;
+}
+
+@media (max-width: 768px) {
+  .topbar-menu-btn {
+    display: flex !important;
   }
 }

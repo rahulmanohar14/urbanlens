@@ -22,7 +22,7 @@ export default function StatsCards() {
 
   if (!data) {
     return (
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "12px" }}>
+      <div className="layout-stats" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "12px" }}>
         {[...Array(4)].map((_, i) => (
           <div key={i} style={{ background: "#12121a", borderRadius: "12px", padding: "20px", height: "90px" }} />
         ))}
@@ -38,7 +38,7 @@ export default function StatsCards() {
   ];
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "12px" }}>
+    <div className="layout-stats" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "12px" }}>
       {cards.map((c) => (
         <div key={c.label} style={{
           background: "#12121a",

@@ -190,7 +190,7 @@ export default function ForecastPage() {
       )}
 
       {/* How It Works */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "16px", marginTop: "16px" }}>
+      <div className="layout-three-col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "16px", marginTop: "16px" }}>
         {[
           { num: "01", title: "Historical Data", desc: "Daily incident counts from PostGIS, aggregated via materialized views with window functions" },
           { num: "02", title: "Forecasting Model", desc: "Holt-Winters Exponential Smoothing captures trend and weekly seasonality in 7-day cycles" },
