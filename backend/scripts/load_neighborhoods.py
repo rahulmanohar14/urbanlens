@@ -7,7 +7,7 @@ import json
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 
-DATABASE_URL = "postgresql+asyncpg://postgres:postgres@localhost:5432/urbanlens"
+DATABASE_URL = NEON_URL = "postgresql+asyncpg://neondb_owner:npg_3IxyaQplgf8K@ep-flat-lake-any6dleb-pooler.c-6.us-east-1.aws.neon.tech/neondb?ssl=require"
 
 engine = create_async_engine(DATABASE_URL)
 async_session = async_sessionmaker(engine, class_=AsyncSession)

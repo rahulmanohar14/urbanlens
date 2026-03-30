@@ -6,7 +6,7 @@ from datetime import datetime
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 
-DATABASE_URL = "postgresql+asyncpg://postgres:postgres@localhost:5432/urbanlens"
+DATABASE_URL = NEON_URL = "postgresql+asyncpg://neondb_owner:npg_3IxyaQplgf8K@ep-flat-lake-any6dleb-pooler.c-6.us-east-1.aws.neon.tech/neondb?ssl=require"
 BOSTON_API = "https://data.boston.gov/api/3/action/datastore_search"
 RESOURCE_CRIME = "b973d8cb-eeb2-4e7e-99da-c92938efc9c0"
 
