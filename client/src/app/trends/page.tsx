@@ -65,6 +65,7 @@ export default function TrendsPage() {
     setTrends(res.data.data || []);
   };
 
+  // Build heatmap grid
   const heatmapGrid: Record<string, Record<number, number>> = {};
   let maxCount = 0;
   DAYS_ORDER.forEach((day) => { heatmapGrid[day] = {}; for (let h = 0; h < 24; h++) heatmapGrid[day][h] = 0; });
@@ -77,7 +78,7 @@ export default function TrendsPage() {
   });
 
   if (loading) return (
-    <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-5">
+    <div style={{ maxWidth: "1400px", margin: "0 auto", padding: "24px" }}>
       <div style={{ ...card, height: "400px", display: "flex", alignItems: "center", justifyContent: "center" }}>
         <p style={{ fontSize: "13px", color: "#55556a" }}>Loading analytics...</p>
       </div>
@@ -85,11 +86,11 @@ export default function TrendsPage() {
   );
 
   return (
-    <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-5">
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4 mb-6">
+    <div style={{ maxWidth: "1400px", margin: "0 auto", padding: "24px" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "24px", flexWrap: "wrap", gap: "16px" }}>
         <div>
-          <h1 className="text-lg sm:text-xl font-semibold" style={{ letterSpacing: "-0.3px" }}>Analytics</h1>
-          <p className="text-xs mt-1" style={{ color: "#55556a" }}>Time-series analysis, temporal patterns, and street-level insights</p>
+          <h1 style={{ fontSize: "20px", fontWeight: 600, letterSpacing: "-0.3px" }}>Analytics</h1>
+          <p style={{ fontSize: "12px", color: "#55556a", marginTop: "4px" }}>Time-series analysis, temporal patterns, and street-level insights</p>
         </div>
         <select value={selHood} onChange={(e) => filterByHood(e.target.value)} style={{ fontSize: "12px", padding: "8px 14px", borderRadius: "8px", background: "#12121a", border: "1px solid rgba(255,255,255,0.08)", color: "#eeeef0", cursor: "pointer", minWidth: "180px" }}>
           <option value="">All Neighborhoods</option>
@@ -117,9 +118,10 @@ export default function TrendsPage() {
       {/* Time Pattern Heatmap */}
       <div style={{ ...card, marginBottom: "16px" }}>
         <p style={sectionTitle}>Crime Time Patterns</p>
-        <p className="text-xs mb-4 -mt-2" style={{ color: "#55556a" }}>When do crimes happen? Darker = more crimes at that hour and day.</p>
+        <p style={{ fontSize: "11px", color: "#55556a", marginBottom: "16px", marginTop: "-8px" }}>When do crimes happen? Darker = more crimes at that hour and day.</p>
         <div style={{ overflowX: "auto" }}>
           <div style={{ minWidth: "700px" }}>
+            {/* Hour labels */}
             <div style={{ display: "flex", paddingLeft: "50px", marginBottom: "4px" }}>
               {Array.from({ length: 24 }, (_, h) => (
                 <div key={h} style={{ flex: 1, textAlign: "center", fontSize: "9px", color: "#55556a" }}>
@@ -127,6 +129,7 @@ export default function TrendsPage() {
                 </div>
               ))}
             </div>
+            {/* Rows */}
             {DAYS_ORDER.map((day) => (
               <div key={day} style={{ display: "flex", alignItems: "center", marginBottom: "2px" }}>
                 <div style={{ width: "50px", fontSize: "10px", color: "#9898a6", fontWeight: 500, flexShrink: 0 }}>{DAY_SHORT[day]}</div>
@@ -148,6 +151,7 @@ export default function TrendsPage() {
                 </div>
               </div>
             ))}
+            {/* Legend */}
             <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "12px", paddingLeft: "50px" }}>
               <span style={{ fontSize: "9px", color: "#55556a" }}>Less</span>
               {["rgba(108,92,231,0.05)", "rgba(108,92,231,0.2)", "rgba(108,92,231,0.4)", "rgba(253,203,110,0.6)", "rgba(255,107,107,0.6)", "rgba(255,107,107,0.9)"].map((c, i) => (
@@ -160,7 +164,7 @@ export default function TrendsPage() {
       </div>
 
       {/* Category + Crimes by Offense */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "16px" }}>
         <div style={card}>
           <p style={sectionTitle}>311 Incidents by Category</p>
           {categories.length > 0 ? (
@@ -193,18 +197,18 @@ export default function TrendsPage() {
       </div>
 
       {/* Top Streets */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "16px" }}>
         <div style={card}>
           <p style={sectionTitle}>Top Streets — 311 Incidents</p>
           {(topStreets.incidents || []).length > 0 ? (
             <div>
               {topStreets.incidents.map((s: any, i: number) => (
                 <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0, flex: 1 }}>
-                    <span style={{ fontSize: "11px", fontWeight: 700, color: "#6c5ce7", background: "rgba(108,92,231,0.1)", padding: "2px 8px", borderRadius: "6px", minWidth: "28px", textAlign: "center", flexShrink: 0 }}>{i + 1}</span>
-                    <span className="text-xs font-medium truncate">{s.street}</span>
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                    <span style={{ fontSize: "11px", fontWeight: 700, color: "#6c5ce7", background: "rgba(108,92,231,0.1)", padding: "2px 8px", borderRadius: "6px", minWidth: "28px", textAlign: "center" }}>{i + 1}</span>
+                    <span style={{ fontSize: "12px", fontWeight: 500 }}>{s.street}</span>
                   </div>
-                  <span style={{ fontSize: "12px", fontWeight: 600, color: "#a29bfe", flexShrink: 0, marginLeft: "8px" }}>{s.count}</span>
+                  <span style={{ fontSize: "12px", fontWeight: 600, color: "#a29bfe" }}>{s.count}</span>
                 </div>
               ))}
             </div>
@@ -217,11 +221,11 @@ export default function TrendsPage() {
             <div>
               {topStreets.crimes.map((s: any, i: number) => (
                 <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0, flex: 1 }}>
-                    <span style={{ fontSize: "11px", fontWeight: 700, color: "#ff6b6b", background: "rgba(255,107,107,0.1)", padding: "2px 8px", borderRadius: "6px", minWidth: "28px", textAlign: "center", flexShrink: 0 }}>{i + 1}</span>
-                    <span className="text-xs font-medium truncate">{s.street}</span>
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                    <span style={{ fontSize: "11px", fontWeight: 700, color: "#ff6b6b", background: "rgba(255,107,107,0.1)", padding: "2px 8px", borderRadius: "6px", minWidth: "28px", textAlign: "center" }}>{i + 1}</span>
+                    <span style={{ fontSize: "12px", fontWeight: 500 }}>{s.street}</span>
                   </div>
-                  <span style={{ fontSize: "12px", fontWeight: 600, color: "#ff6b6b", flexShrink: 0, marginLeft: "8px" }}>{s.count}</span>
+                  <span style={{ fontSize: "12px", fontWeight: 600, color: "#ff6b6b" }}>{s.count}</span>
                 </div>
               ))}
             </div>
