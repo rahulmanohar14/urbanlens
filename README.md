@@ -1,5 +1,9 @@
 # UrbanLens
 
+**[Live Demo](https://urbanlens-app.vercel.app)** 
+**[API Docs](https://urbanlens-api.onrender.com/docs)**
+**[GitHub](https://github.com/rahulmanohar14/urbanlens)**
+
 **Real-time geospatial analytics platform for Boston city data — 19,000+ incidents and crime reports.**
 
 Built with FastAPI, PostgreSQL/PostGIS, Next.js, Leaflet.js, Recharts, and Holt-Winters forecasting.
