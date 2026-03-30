@@ -37,9 +37,7 @@ export default function Dashboard() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [mapMode, setMapMode] = useState<MapMode>("both");
 
-  const filtered = selectedCategory
-    ? nearbyItems.filter((i) => i.category === selectedCategory)
-    : nearbyItems;
+  const filtered = selectedCategory ? nearbyItems.filter((i) => i.category === selectedCategory) : nearbyItems;
 
   const toggleStyle = (active: boolean) => ({
     padding: "6px 14px",
@@ -54,17 +52,17 @@ export default function Dashboard() {
   });
 
   return (
-    <div style={{ maxWidth: "1400px", margin: "0 auto", padding: "24px" }}>
-      <div style={{ marginBottom: "24px" }}>
-        <h1 style={{ fontSize: "20px", fontWeight: 600, letterSpacing: "-0.3px" }}>Dashboard</h1>
-        <p style={{ fontSize: "12px", color: "#55556a", marginTop: "4px" }}>Real-time geospatial analytics across 19,000+ Boston incidents and crime reports</p>
+    <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-5">
+      <div style={{ marginBottom: "20px" }}>
+        <h1 className="text-lg sm:text-xl font-semibold" style={{ letterSpacing: "-0.3px" }}>Dashboard</h1>
+        <p className="text-xs mt-1" style={{ color: "#55556a" }}>Real-time geospatial analytics across 19,000+ Boston incidents and crime reports</p>
       </div>
 
-      <div style={{ marginBottom: "24px" }}>
+      <div style={{ marginBottom: "20px" }}>
         <StatsCards />
       </div>
 
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px", gap: "12px", flexWrap: "wrap" }}>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
         <Filters onCategoryChange={setSelectedCategory} selectedCategory={selectedCategory} mode={mapMode} />
         <div style={{ display: "flex", alignItems: "center", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "8px", padding: "3px", flexShrink: 0 }}>
           <button onClick={() => setMapMode("both")} style={toggleStyle(mapMode === "both")}>Both</button>
@@ -73,18 +71,18 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "16px" }}>
-        <div>
-          <div style={{ height: "540px", borderRadius: "12px", overflow: "hidden", border: "1px solid rgba(255,255,255,0.06)" }}>
+      <div className="flex flex-col lg:grid lg:grid-cols-12 gap-4">
+        <div className="lg:col-span-8">
+          <div className="rounded-xl overflow-hidden border h-[350px] sm:h-[450px] lg:h-[540px]" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
             <Map mode={mapMode} onNearbySearch={setNearbyItems} onNeighborhoodClick={(name) => setSelectedNeighborhood(name)} />
           </div>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "8px", padding: "0 4px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+          <div className="flex items-center justify-between mt-2 px-1">
+            <div className="flex items-center gap-4">
               <MapLegend />
-              <div style={{ display: "flex", alignItems: "center", gap: "12px", fontSize: "10px", color: "#55556a" }}>
+              <div className="hidden sm:flex items-center gap-3" style={{ fontSize: "10px", color: "#55556a" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
                   <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#6c5ce7" }} />
-                  <span>311 Incident</span>
+                  <span>311</span>
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
                   <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#ff6b6b" }} />
@@ -92,10 +90,10 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
-            {selectedNeighborhood && <p style={{ fontSize: "11px", color: "#55556a" }}>Selected: <span style={{ color: "#6c5ce7" }}>{selectedNeighborhood}</span></p>}
+            {selectedNeighborhood && <p className="text-xs hidden sm:block" style={{ color: "#55556a" }}>Selected: <span style={{ color: "#6c5ce7" }}>{selectedNeighborhood}</span></p>}
           </div>
         </div>
-        <div style={{ height: "540px" }}>
+        <div className="lg:col-span-4 h-[400px] lg:h-[540px]">
           <IncidentList incidents={filtered} />
         </div>
       </div>
