@@ -83,7 +83,9 @@ export default function TrendsPage() {
       // Load comparison separately so it doesn't block the rest
       try {
         const comp = await getComparison({ days: 180 });
-        setComparison(comp.data || []);
+        // API returns array directly
+        const compData = Array.isArray(comp.data) ? comp.data : (comp.data?.data || []);
+        setComparison(compData);
       } catch (err) {
         console.error("Comparison load error:", err);
       }
@@ -279,9 +281,8 @@ export default function TrendsPage() {
           <ResponsiveContainer width="100%" height={380}>
             <BarChart
               data={comparison
-                .filter((n: any) => (n.incidents_current || 0) + (n.crimes_current || 0) > 0)
-                .sort((a: any, b: any) => (b.incidents_current + b.crimes_current) - (a.incidents_current + a.crimes_current))
-                .slice(0, 12)
+                .filter((n: any) => n.neighborhood && n.neighborhood !== "Harbor Islands")
+                .slice(0, 15)
               }
               layout="vertical"
             >
