@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { getIncidentCategories, getCrimesByOffense } from "@/lib/api";
 
 interface Props {
-  onCategoryChange: (category: string | null) => void;
+  onCategoryChange: (category: string | null, type: "incident" | "crime" | null) => void;
   selectedCategory: string | null;
   mode: "both" | "incidents" | "crimes";
 }
@@ -20,39 +20,65 @@ export default function Filters({ onCategoryChange, selectedCategory, mode }: Pr
 
   // Reset filter when mode changes
   useEffect(() => {
-    onCategoryChange(null);
+    onCategoryChange(null, null);
   }, [mode]);
 
-  const btnStyle = (active: boolean) => ({
-    padding: "6px 14px",
-    borderRadius: "20px",
-    fontSize: "11px",
-    fontWeight: active ? 600 : 400,
-    background: active ? "#6c5ce7" : "transparent",
-    color: active ? "#fff" : "#9898a6",
-    border: active ? "1px solid #6c5ce7" : "1px solid rgba(255,255,255,0.08)",
-    cursor: "pointer",
-    transition: "all 0.2s",
-    whiteSpace: "nowrap" as const,
-  });
+  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const val = e.target.value;
+    if (!val) {
+      onCategoryChange(null, null);
+      return;
+    }
+    // Value format: "type::category"
+    const [type, ...rest] = val.split("::");
+    onCategoryChange(rest.join("::"), type as "incident" | "crime");
+  };
 
-  let items: string[] = [];
-  if (mode === "incidents") {
-    items = incidentCats.slice(0, 8).map((c) => c.category);
-  } else if (mode === "crimes") {
-    items = crimeOffenses.slice(0, 8).map((c) => c.offense_description);
-  } else {
-    items = incidentCats.slice(0, 5).map((c) => c.category);
-  }
+  const currentValue = selectedCategory
+    ? `${mode === "crimes" ? "crime" : "incident"}::${selectedCategory}`
+    : "";
 
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: "8px", overflowX: "auto", paddingBottom: "4px", flex: 1 }}>
-      <button onClick={() => onCategoryChange(null)} style={btnStyle(!selectedCategory)}>All</button>
-      {items.map((name) => (
-        <button key={name} onClick={() => onCategoryChange(name)} style={btnStyle(selectedCategory === name)}>
-          {name}
-        </button>
-      ))}
+    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+      <span style={{ fontSize: "11px", color: "#55556a", whiteSpace: "nowrap" }}>Filter by</span>
+      <select
+        value={currentValue}
+        onChange={handleChange}
+        style={{
+          fontSize: "12px",
+          padding: "8px 14px",
+          borderRadius: "8px",
+          background: "#12121a",
+          border: "1px solid rgba(255,255,255,0.08)",
+          color: selectedCategory ? "#a29bfe" : "#eeeef0",
+          cursor: "pointer",
+          minWidth: "200px",
+          maxWidth: "320px",
+          outline: "none",
+        }}
+      >
+        <option value="">All Categories</option>
+
+        {(mode === "incidents" || mode === "both") && (
+          <optgroup label="── 311 Incidents">
+            {incidentCats.slice(0, 12).map((c) => (
+              <option key={`incident::${c.category}`} value={`incident::${c.category}`}>
+                {c.category} ({c.count.toLocaleString()})
+              </option>
+            ))}
+          </optgroup>
+        )}
+
+        {(mode === "crimes" || mode === "both") && (
+          <optgroup label="── Crimes">
+            {crimeOffenses.slice(0, 12).map((c) => (
+              <option key={`crime::${c.offense_description}`} value={`crime::${c.offense_description}`}>
+                {c.offense_description} ({c.count.toLocaleString()})
+              </option>
+            ))}
+          </optgroup>
+        )}
+      </select>
     </div>
   );
 }

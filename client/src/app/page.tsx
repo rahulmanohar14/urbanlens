@@ -34,16 +34,37 @@ type MapMode = "both" | "incidents" | "crimes";
 
 export default function Dashboard() {
   const [showSplash, setShowSplash] = useState(true);
-  const [nearbyItems, setNearbyItems] = useState<NearbyItem[]>([]);
+  // allNearbyItems = raw results from last map click (never filtered)
+  const [allNearbyItems, setAllNearbyItems] = useState<NearbyItem[]>([]);
   const [selectedNeighborhood, setSelectedNeighborhood] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedType, setSelectedType] = useState<"incident" | "crime" | null>(null);
   const [mapMode, setMapMode] = useState<MapMode>("both");
 
   const handleReady = useCallback(() => setShowSplash(false), []);
 
-  const filtered = selectedCategory
-    ? nearbyItems.filter((i) => i.category === selectedCategory)
-    : nearbyItems;
+  const handleCategoryChange = (category: string | null, type: "incident" | "crime" | null) => {
+    setSelectedCategory(category);
+    setSelectedType(type);
+  };
+
+  const handleModeChange = (mode: MapMode) => {
+    setMapMode(mode);
+    setSelectedCategory(null);
+    setSelectedType(null);
+  };
+
+  // Derive displayed list from raw results + current mode + current filter
+  const displayed = allNearbyItems.filter((item) => {
+    // First filter by map mode
+    if (mapMode === "incidents" && item.type !== "incident") return false;
+    if (mapMode === "crimes" && item.type !== "crime") return false;
+    // Then filter by selected category
+    if (selectedCategory && selectedType) {
+      return item.type === selectedType && item.category === selectedCategory;
+    }
+    return true;
+  });
 
   const toggleStyle = (active: boolean) => ({
     padding: "6px 14px",
@@ -78,18 +99,26 @@ export default function Dashboard() {
         </div>
 
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px", gap: "12px", flexWrap: "wrap" }}>
-          <Filters onCategoryChange={setSelectedCategory} selectedCategory={selectedCategory} mode={mapMode} />
+          <Filters
+            onCategoryChange={handleCategoryChange}
+            selectedCategory={selectedCategory}
+            mode={mapMode}
+          />
           <div style={{ display: "flex", alignItems: "center", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "8px", padding: "3px", flexShrink: 0 }}>
-            <button onClick={() => setMapMode("both")} style={toggleStyle(mapMode === "both")}>Both</button>
-            <button onClick={() => setMapMode("incidents")} style={toggleStyle(mapMode === "incidents")}>311 Only</button>
-            <button onClick={() => setMapMode("crimes")} style={toggleStyle(mapMode === "crimes")}>Crimes Only</button>
+            <button onClick={() => handleModeChange("both")} style={toggleStyle(mapMode === "both")}>Both</button>
+            <button onClick={() => handleModeChange("incidents")} style={toggleStyle(mapMode === "incidents")}>311 Only</button>
+            <button onClick={() => handleModeChange("crimes")} style={toggleStyle(mapMode === "crimes")}>Crimes Only</button>
           </div>
         </div>
 
         <div className="layout-map-sidebar" style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "16px" }}>
           <div>
             <div className="map-container" style={{ height: "540px", borderRadius: "12px", overflow: "hidden", border: "1px solid rgba(255,255,255,0.06)" }}>
-              <Map mode={mapMode} onNearbySearch={setNearbyItems} onNeighborhoodClick={(name) => setSelectedNeighborhood(name)} />
+              <Map
+                mode={mapMode}
+                onNearbySearch={setAllNearbyItems}
+                onNeighborhoodClick={(name) => setSelectedNeighborhood(name)}
+              />
             </div>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "8px", padding: "0 4px" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
@@ -113,7 +142,7 @@ export default function Dashboard() {
             </div>
           </div>
           <div className="sidebar-container" style={{ height: "540px" }}>
-            <IncidentList incidents={filtered} />
+            <IncidentList incidents={displayed} mode={mapMode} />
           </div>
         </div>
       </div>

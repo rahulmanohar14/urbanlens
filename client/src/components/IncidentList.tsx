@@ -13,6 +13,7 @@ interface NearbyItem {
 
 interface Props {
   incidents: NearbyItem[];
+  mode: "both" | "incidents" | "crimes";
 }
 
 function formatDate(dateStr?: string): string {
@@ -25,7 +26,7 @@ function formatDate(dateStr?: string): string {
   }
 }
 
-export default function IncidentList({ incidents }: Props) {
+export default function IncidentList({ incidents, mode }: Props) {
   if (incidents.length === 0) {
     return (
       <div style={{ height: "100%", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.06)", background: "#12121a", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px", textAlign: "center" }}>
@@ -44,10 +45,10 @@ export default function IncidentList({ incidents }: Props) {
       <div style={{ padding: "12px 16px", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
         <span style={{ fontSize: "11px", fontWeight: 600, color: "#55556a", textTransform: "uppercase", letterSpacing: "0.5px" }}>Nearby</span>
         <div style={{ display: "flex", gap: "6px" }}>
-          {incidentCount > 0 && (
+          {mode !== "crimes" && incidentCount > 0 && (
             <span style={{ fontSize: "10px", fontWeight: 500, padding: "2px 8px", borderRadius: "10px", background: "rgba(108,92,231,0.12)", color: "#a29bfe" }}>{incidentCount} 311</span>
           )}
-          {crimeCount > 0 && (
+          {mode !== "incidents" && crimeCount > 0 && (
             <span style={{ fontSize: "10px", fontWeight: 500, padding: "2px 8px", borderRadius: "10px", background: "rgba(255,107,107,0.12)", color: "#ff6b6b" }}>{crimeCount} crimes</span>
           )}
         </div>
@@ -56,7 +57,8 @@ export default function IncidentList({ incidents }: Props) {
         {incidents.map((inc, i) => {
           const dateStr = inc.type === "incident" ? formatDate(inc.open_dt) : formatDate(inc.occurred_on);
           return (
-            <div key={`${inc.type}-${inc.id}-${i}`} style={{ padding: "12px 16px", borderBottom: "1px solid rgba(255,255,255,0.04)", transition: "background 0.15s", cursor: "default" }}
+            <div key={`${inc.type}-${inc.id}-${i}`}
+              style={{ padding: "12px 16px", borderBottom: "1px solid rgba(255,255,255,0.04)", transition: "background 0.15s", cursor: "default" }}
               onMouseEnter={(e) => e.currentTarget.style.background = "rgba(255,255,255,0.02)"}
               onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
             >
