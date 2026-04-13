@@ -8,6 +8,13 @@ interface SplashScreenProps {
 
 export default function SplashScreen({ onReady }: SplashScreenProps) {
   const [status, setStatus] = useState<"waking" | "ready">("waking");
+
+  // If backend already confirmed alive this session, skip immediately
+  useEffect(() => {
+    if (sessionStorage.getItem("backend_ready") === "true") {
+      onReady();
+    }
+  }, [onReady]);
   const [dots, setDots] = useState("");
   const [elapsed, setElapsed] = useState(0);
 
@@ -35,6 +42,7 @@ export default function SplashScreen({ onReady }: SplashScreenProps) {
           signal: AbortSignal.timeout(8000),
         });
         if (res.ok && !cancelled) {
+          sessionStorage.setItem("backend_ready", "true");
           setStatus("ready");
           setTimeout(onReady, 800); // brief "ready" flash before dismissing
         } else {
