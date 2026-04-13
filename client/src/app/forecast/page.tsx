@@ -41,7 +41,7 @@ export default function ForecastPage() {
 
     try {
       // Get historical trends
-      const trendsParams: any = { days: 365 };
+      const trendsParams: any = { days: 180 };
       if (neighborhoodId) trendsParams.neighborhood_id = parseInt(neighborhoodId);
       const trendsRes = await getTrends(trendsParams);
       setHistorical(trendsRes.data.data || []);

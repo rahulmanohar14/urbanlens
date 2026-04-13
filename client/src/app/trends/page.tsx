@@ -57,8 +57,8 @@ export default function TrendsPage() {
 
   useEffect(() => {
     Promise.all([
-      getTrends({ days: 365 }),
-      getCategoryBreakdown({ days: 365 }),
+      getTrends({ days: 180 }),
+      getCategoryBreakdown({ days: 180 }),
       getResolutionTimes(),
       getNeighborhoods(),
       getCrimesByOffense(),
