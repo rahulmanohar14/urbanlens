@@ -2,8 +2,7 @@
 
 **[Live Demo](https://urbanlens-app.vercel.app)** · **[API Docs](https://urbanlens-api.onrender.com/docs)**
 
-
-**Real-time geospatial analytics platform for Boston city data — 19,000+ incidents and crime reports.**
+**Live geospatial analytics platform for Boston city data — 104,000+ incidents and crime reports, updated daily.**
 
 Built with FastAPI, PostgreSQL/PostGIS, Next.js, Leaflet.js, Recharts, and Holt-Winters forecasting.
 
@@ -11,7 +10,7 @@ Built with FastAPI, PostgreSQL/PostGIS, Next.js, Leaflet.js, Recharts, and Holt-
 
 ## Overview
 
-UrbanLens ingests 19,000+ records from two Boston open data sources — 311 service requests and crime incident reports — into a PostGIS-enabled PostgreSQL database with spatial indexing. A FastAPI backend serves 17+ RESTful endpoints including geospatial radius search, time-series analytics, and ML-powered forecasting. The Next.js frontend features an interactive choropleth map with dual-source toggling, crime temporal heatmaps, street-level rankings, and a Holt-Winters prediction engine with confidence intervals.
+UrbanLens ingests 104,000+ records from two Boston open data sources — 311 service requests and crime incident reports — into a PostGIS-enabled PostgreSQL database with spatial indexing. Data is refreshed nightly via a Celery beat scheduler pulling from the [Boston Analyze Data Portal](https://data.boston.gov) live API. A FastAPI backend serves 20+ RESTful endpoints including geospatial radius search, time-series analytics, and ML-powered forecasting. The Next.js frontend features an interactive choropleth map with dual-source toggling, crime temporal heatmaps, street-level rankings, and a Holt-Winters prediction engine with confidence intervals.
 
 ---
 
@@ -23,6 +22,7 @@ UrbanLens ingests 19,000+ records from two Boston open data sources — 311 serv
 - Click-to-search: find all incidents and crimes within 500m using PostGIS ST_DWithin
 - 26 Boston neighborhood polygons with full PostGIS geometry
 - Dynamic choropleth recoloring based on active data source
+- Category dropdown filter with type-aware filtering (311 vs crime) synced to sidebar in real time
 
 **Analytics Engine**
 - Crime temporal heatmap: hour-by-day grid revealing when crimes occur (Friday nights, Monday mornings)
@@ -39,17 +39,26 @@ UrbanLens ingests 19,000+ records from two Boston open data sources — 311 serv
 - Automatic trailing-zero trimming for clean training data
 - Served via async prediction endpoints
 
+**Live Data Pipeline**
+- Nightly Celery beat ingestion from Boston Open Data API (311 2026 + Crime datasets)
+- Upsert-based ETL keyed on `case_enquiry_id` / `incident_number` — no duplicates
+- Automatic materialized view refresh after each ingestion run
+- Redis keepalive task every 10 minutes to maintain free-tier uptime
+- Ingestion logs stored in database with record counts and timestamps
+
 **Production Infrastructure**
 - JWT authentication with bcrypt password hashing
-- Redis caching with TTL on all analytics endpoints (15-30 min)
+- Redis caching with TTL on all analytics endpoints (15–30 min)
 - Celery workers for scheduled data ingestion and materialized view refresh
 - Database audit trail with PostgreSQL triggers
 - Alembic migrations for schema versioning
 - Dual data source ETL pipeline (311 + crime reports)
+- Splash screen with live backend health polling for cold-start UX
 
 ---
 
 ## Architecture
+
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                FRONTEND (Next.js 16 + TypeScript)            │
@@ -83,9 +92,9 @@ UrbanLens ingests 19,000+ records from two Boston open data sources — 311 serv
    │ PostgreSQL   │ │ Redis      │  │ Celery      │
    │ + PostGIS    │ │            │  │ Workers     │
    │              │ │ Query cache│  │             │
-   │ 8 tables     │ │ TTL-based  │  │ Scheduled   │
-   │ 2 mat views  │ │ Rate limit │  │ ETL jobs    │
-   │ GiST indexes │ │            │  │ View refresh│
+   │ 8 tables     │ │ TTL-based  │  │ Nightly ETL │
+   │ 2 mat views  │ │ Keepalive  │  │ View refresh│
+   │ GiST indexes │ │            │  │ Redis ping  │
    │ Audit trigger│ │            │  │             │
    └──────────────┘ └────────────┘  └─────────────┘
 ```
@@ -105,11 +114,12 @@ UrbanLens ingests 19,000+ records from two Boston open data sources — 311 serv
 | ORM | SQLAlchemy (async) | Database models and migrations |
 | Migrations | Alembic | Schema versioning |
 | Auth | JWT (python-jose), bcrypt | Authentication |
-| Cache | Redis | TTL-based query caching |
-| Queue | Celery | Scheduled ETL, view refresh |
+| Cache | Redis (Upstash) | TTL-based query caching + keepalive |
+| Queue | Celery | Nightly ETL, view refresh, keepalive |
 | ML | statsmodels (Holt-Winters) | Time-series forecasting |
 | HTTP | httpx | Async API client for data ingestion |
-| Containers | Docker Compose | PostgreSQL + Redis infrastructure |
+| Hosting | Vercel + Render + Neon | Frontend, backend, database |
+| Containers | Docker Compose | Local PostgreSQL + Redis |
 
 ---
 
@@ -117,8 +127,8 @@ UrbanLens ingests 19,000+ records from two Boston open data sources — 311 serv
 
 | Dataset | Source | Records |
 |---------|--------|---------|
-| 311 Service Requests | [Boston Analyze Data Portal](https://data.boston.gov) | 9,848 |
-| Crime Incident Reports | [Boston Analyze Data Portal](https://data.boston.gov) | 9,125 |
+| 311 Service Requests 2026 | [Boston Analyze Data Portal](https://data.boston.gov) | 94,179 (live, updated daily) |
+| Crime Incident Reports | [Boston Analyze Data Portal](https://data.boston.gov) | 20,852 (live, updated daily) |
 | Neighborhood Boundaries | [Boston GeoJSON](https://github.com/blackmad/neighborhoods) | 26 polygons |
 
 ---
@@ -135,7 +145,7 @@ UrbanLens ingests 19,000+ records from two Boston open data sources — 311 serv
 | `users` | JWT-authenticated user accounts |
 | `predictions` | Stored forecast results with confidence intervals |
 | `anomaly_events` | Detected anomalous incident spikes |
-| `ingestion_logs` | ETL pipeline run tracking |
+| `ingestion_logs` | ETL pipeline run tracking with record counts and timestamps |
 | `audit_trail` | Trigger-based change logging |
 
 **Materialized Views:**
@@ -153,7 +163,7 @@ UrbanLens ingests 19,000+ records from two Boston open data sources — 311 serv
 
 ---
 
-## API Endpoints (17+)
+## API Endpoints (20+)
 
 ### Incidents
 | Method | Endpoint | Description |
@@ -204,6 +214,11 @@ UrbanLens ingests 19,000+ records from two Boston open data sources — 311 serv
 | POST | `/api/v1/auth/login` | JWT token |
 | GET | `/api/v1/auth/me` | Current user |
 
+### Health
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/health` | Backend + Redis status check |
+
 ---
 
 ## Getting Started
@@ -234,11 +249,13 @@ pip install -r requirements.txt
 ```
 
 Create a `.env` file in the backend directory:
-```
+```env
 DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/urbanlens
-SYNC_DATABASE_URL=postgresql://postgres:postgres@localhost:5432/urbanlens
+SYNC_DATABASE_URL=postgresql+psycopg2://postgres:postgres@localhost:5432/urbanlens
 REDIS_URL=redis://localhost:6379/0
 SECRET_KEY=your-secret-key
+RESOURCE_311_2026=1a0b420d-99f1-4887-9851-990b2a5a6e17
+RESOURCE_CRIME=b973d8cb-eeb2-4e7e-99da-c92938efc9c0
 ```
 
 Run migrations and load data:
@@ -266,48 +283,51 @@ npm run dev
 
 Open http://localhost:3000
 
-### 5. Optional: Start Celery worker
+### 5. Optional: Start Celery worker + beat scheduler
 ```bash
 cd backend
 celery -A app.tasks.celery_app worker --loglevel=info
+celery -A app.tasks.celery_app beat --loglevel=info
 ```
 
 ---
 
 ## Project Structure
+
 ```
 urbanlens/
 ├── docker-compose.yml
 ├── README.md
 ├── backend/
 │   ├── app/
-│   │   ├── main.py                    # FastAPI entry point
-│   │   ├── config.py                  # Settings
+│   │   ├── main.py                    # FastAPI entry point + health endpoint
+│   │   ├── config.py                  # Settings + resource IDs
 │   │   ├── database.py                # PostgreSQL + PostGIS connection
 │   │   ├── models/                    # SQLAlchemy ORM (8 tables)
 │   │   ├── schemas/                   # Pydantic validation
 │   │   ├── routers/
 │   │   │   ├── incidents.py           # 311 incident endpoints
-│   │   │   ├── crimes.py             # Crime endpoints
+│   │   │   ├── crimes.py              # Crime endpoints
 │   │   │   ├── neighborhoods.py       # Neighborhood + GeoJSON
-│   │   │   ├── analytics.py          # Trends, heatmap, top streets
-│   │   │   ├── predictions.py        # Holt-Winters forecast
-│   │   │   └── auth.py               # JWT authentication
+│   │   │   ├── analytics.py           # Trends, heatmap, top streets
+│   │   │   ├── predictions.py         # Holt-Winters forecast
+│   │   │   └── auth.py                # JWT authentication
 │   │   ├── services/
 │   │   │   ├── geo_service.py         # PostGIS spatial queries
 │   │   │   ├── analytics_service.py   # Window functions, CTEs
 │   │   │   ├── prediction_service.py  # Holt-Winters forecasting
 │   │   │   └── auth_service.py        # JWT + bcrypt
 │   │   ├── tasks/
-│   │   │   ├── celery_app.py          # Celery config + beat schedule
-│   │   │   └── ingest_tasks.py        # Scheduled ETL tasks
+│   │   │   ├── celery_app.py          # Celery config + nightly beat schedule
+│   │   │   └── ingest_tasks.py        # ETL tasks + Redis keepalive
 │   │   └── utils/
 │   │       ├── cache.py               # Redis caching helpers
 │   │       └── pagination.py          # Cursor-based pagination
 │   ├── scripts/
 │   │   ├── load_neighborhoods.py      # Load GeoJSON boundaries
-│   │   ├── ingest_311.py              # 311 data ETL
-│   │   └── ingest_crimes.py           # Crime data ETL
+│   │   ├── ingest_311.py              # 311 data ETL (historical)
+│   │   ├── ingest_crimes.py           # Crime data ETL (historical)
+│   │   └── backfill_2026.py           # One-time 2026 data backfill
 │   ├── alembic/                       # Database migrations
 │   └── requirements.txt
 ├── client/
@@ -319,9 +339,10 @@ urbanlens/
 │   │   ├── components/
 │   │   │   ├── Map.tsx                # Leaflet + PostGIS + dual source
 │   │   │   ├── TopBar.tsx             # Glass navbar
-│   │   │   ├── StatsCards.tsx         # Summary metrics
-│   │   │   ├── Filters.tsx            # Dynamic category filters
+│   │   │   ├── StatsCards.tsx         # Summary metrics with skeleton loaders
+│   │   │   ├── Filters.tsx            # Dropdown category filter
 │   │   │   ├── IncidentList.tsx       # Nearby results with type tags
+│   │   │   ├── SplashScreen.tsx       # Cold-start UX with backend health poll
 │   │   │   └── MapLegend.tsx          # Density legend
 │   │   └── lib/
 │   │       └── api.ts                 # Axios API client
