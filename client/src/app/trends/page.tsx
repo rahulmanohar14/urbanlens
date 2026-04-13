@@ -58,26 +58,38 @@ export default function TrendsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([
-      getTrends({ days: 180 }),
-      getCategoryBreakdown({ days: 180 }),
-      getNeighborhoods(),
-      getCrimesByOffense(),
-      getTimePatterns(),
-      getTopStreets(),
-      getComparison({ days: 180 }),
-    ])
-      .then(([t, c, h, crimes, tp, ts, comp]) => {
+    const load = async () => {
+      try {
+        const [t, c, h, crimes, tp, ts] = await Promise.all([
+          getTrends({ days: 180 }),
+          getCategoryBreakdown({ days: 180 }),
+          getNeighborhoods(),
+          getCrimesByOffense(),
+          getTimePatterns(),
+          getTopStreets(),
+        ]);
         setTrends(t.data.data || []);
         setCategories(c.data || []);
         setHoods(h.data || []);
         setCrimeOffenses(crimes.data || []);
         setTimePatterns(tp.data || []);
         setTopStreets(ts.data || { incidents: [], crimes: [] });
-        setComparison(comp.data || []);
+      } catch (err) {
+        console.error("Analytics load error:", err);
+      } finally {
         setLoading(false);
-      })
-      .catch(() => setLoading(false));
+      }
+
+      // Load comparison separately so it doesn't block the rest
+      try {
+        const comp = await getComparison({ days: 180 });
+        setComparison(comp.data || []);
+      } catch (err) {
+        console.error("Comparison load error:", err);
+      }
+    };
+
+    load();
   }, []);
 
   const filterByHood = async (id: string) => {
