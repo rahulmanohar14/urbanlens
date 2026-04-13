@@ -23,6 +23,27 @@ function getHeatColor(count: number, max: number): string {
   return "rgba(108,92,231,0.05)";
 }
 
+function SkeletonCard({ height }: { height: number }) {
+  return (
+    <div style={{
+      ...card,
+      height: `${height}px`,
+      marginBottom: "16px",
+      position: "relative",
+      overflow: "hidden",
+    }}>
+      <div style={{ width: "140px", height: "11px", background: "rgba(255,255,255,0.05)", borderRadius: "4px", marginBottom: "20px" }} />
+      <div style={{
+        position: "absolute", inset: 0,
+        background: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.02) 50%, transparent 100%)",
+        backgroundSize: "200% 100%",
+        animation: "shimmer 1.8s infinite",
+      }} />
+      <style>{`@keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }`}</style>
+    </div>
+  );
+}
+
 export default function TrendsPage() {
   const [trends, setTrends] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
@@ -79,8 +100,15 @@ export default function TrendsPage() {
 
   if (loading) return (
     <div style={{ maxWidth: "1400px", margin: "0 auto", padding: "24px" }}>
-      <div style={{ ...card, height: "400px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <p style={{ fontSize: "13px", color: "#55556a" }}>Loading analytics...</p>
+      <div style={{ marginBottom: "24px" }}>
+        <div style={{ width: "120px", height: "20px", background: "rgba(255,255,255,0.05)", borderRadius: "6px", marginBottom: "8px" }} />
+        <div style={{ width: "280px", height: "12px", background: "rgba(255,255,255,0.03)", borderRadius: "4px" }} />
+      </div>
+      <SkeletonCard height={400} />
+      <SkeletonCard height={320} />
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "16px" }}>
+        <SkeletonCard height={320} />
+        <SkeletonCard height={320} />
       </div>
     </div>
   );
@@ -121,7 +149,6 @@ export default function TrendsPage() {
         <p style={{ fontSize: "11px", color: "#55556a", marginBottom: "16px", marginTop: "-8px" }}>When do crimes happen? Darker = more crimes at that hour and day.</p>
         <div style={{ overflowX: "auto" }}>
           <div style={{ minWidth: "700px" }}>
-            {/* Hour labels */}
             <div style={{ display: "flex", paddingLeft: "50px", marginBottom: "4px" }}>
               {Array.from({ length: 24 }, (_, h) => (
                 <div key={h} style={{ flex: 1, textAlign: "center", fontSize: "9px", color: "#55556a" }}>
@@ -129,7 +156,6 @@ export default function TrendsPage() {
                 </div>
               ))}
             </div>
-            {/* Rows */}
             {DAYS_ORDER.map((day) => (
               <div key={day} style={{ display: "flex", alignItems: "center", marginBottom: "2px" }}>
                 <div style={{ width: "50px", fontSize: "10px", color: "#9898a6", fontWeight: 500, flexShrink: 0 }}>{DAY_SHORT[day]}</div>
@@ -151,7 +177,6 @@ export default function TrendsPage() {
                 </div>
               </div>
             ))}
-            {/* Legend */}
             <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "12px", paddingLeft: "50px" }}>
               <span style={{ fontSize: "9px", color: "#55556a" }}>Less</span>
               {["rgba(108,92,231,0.05)", "rgba(108,92,231,0.2)", "rgba(108,92,231,0.4)", "rgba(253,203,110,0.6)", "rgba(255,107,107,0.6)", "rgba(255,107,107,0.9)"].map((c, i) => (

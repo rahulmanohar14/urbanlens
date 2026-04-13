@@ -13,6 +13,35 @@ interface Summary {
   top_neighborhoods: { name: string; count: number }[];
 }
 
+function SkeletonCard() {
+  return (
+    <div style={{
+      background: "#12121a",
+      border: "1px solid rgba(255,255,255,0.06)",
+      borderRadius: "12px",
+      padding: "20px",
+      height: "90px",
+      overflow: "hidden",
+      position: "relative",
+    }}>
+      <div style={{
+        position: "absolute", inset: 0,
+        background: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.03) 50%, transparent 100%)",
+        animation: "shimmer 1.8s infinite",
+        backgroundSize: "200% 100%",
+      }} />
+      <div style={{ width: "60%", height: "10px", background: "rgba(255,255,255,0.05)", borderRadius: "4px", marginBottom: "14px" }} />
+      <div style={{ width: "40%", height: "18px", background: "rgba(255,255,255,0.07)", borderRadius: "4px" }} />
+      <style>{`
+        @keyframes shimmer {
+          0% { background-position: -200% 0; }
+          100% { background-position: 200% 0; }
+        }
+      `}</style>
+    </div>
+  );
+}
+
 export default function StatsCards() {
   const [data, setData] = useState<Summary | null>(null);
 
@@ -23,9 +52,7 @@ export default function StatsCards() {
   if (!data) {
     return (
       <div className="layout-stats" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "12px" }}>
-        {[...Array(4)].map((_, i) => (
-          <div key={i} style={{ background: "#12121a", borderRadius: "12px", padding: "20px", height: "90px" }} />
-        ))}
+        {[...Array(4)].map((_, i) => <SkeletonCard key={i} />)}
       </div>
     );
   }
