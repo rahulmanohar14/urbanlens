@@ -49,22 +49,47 @@ class AnalyticsService:
         return [dict(r._mapping) for r in result.fetchall()]
 
     async def compare_neighborhoods(self, days: int = 365) -> list:
-        """Compare neighborhoods: incidents vs crimes side by side."""
+        """Compare neighborhoods using CTEs for current vs previous period."""
         query = text("""
+            WITH current_period AS (
+                SELECT
+                    n.id AS neighborhood_id,
+                    n.name,
+                    COUNT(i.id)::int AS current_count
+                FROM neighborhoods n
+                LEFT JOIN incidents i ON i.neighborhood_id = n.id
+                    AND i.open_dt > NOW() - MAKE_INTERVAL(days => :days)
+                GROUP BY n.id, n.name
+            ),
+            previous_period AS (
+                SELECT
+                    n.id AS neighborhood_id,
+                    COUNT(i.id)::int AS previous_count
+                FROM neighborhoods n
+                LEFT JOIN incidents i ON i.neighborhood_id = n.id
+                    AND i.open_dt BETWEEN
+                        NOW() - MAKE_INTERVAL(days => :days * 2)
+                        AND NOW() - MAKE_INTERVAL(days => :days)
+                GROUP BY n.id
+            )
             SELECT
-                n.name AS neighborhood,
-                COUNT(DISTINCT i.id)::int AS incidents_current,
-                COUNT(DISTINCT c.id)::int AS crimes_current
-            FROM neighborhoods n
-            LEFT JOIN incidents i
-                ON i.neighborhood_id = n.id
-                AND i.open_dt > NOW() - MAKE_INTERVAL(days => :days)
-            LEFT JOIN crimes c
-                ON c.neighborhood_id = n.id
-                AND c.occurred_on > NOW() - MAKE_INTERVAL(days => :days)
-            GROUP BY n.name
-            ORDER BY (COUNT(DISTINCT i.id) + COUNT(DISTINCT c.id)) DESC
+                c.neighborhood_id,
+                c.name,
+                c.current_count,
+                p.previous_count,
+                CASE
+                    WHEN p.previous_count > 0 THEN
+                        ROUND(
+                            ((c.current_count - p.previous_count)::numeric
+                             / p.previous_count * 100), 1
+                        )::float
+                    ELSE NULL
+                END AS pct_change
+            FROM current_period c
+            JOIN previous_period p ON c.neighborhood_id = p.neighborhood_id
+            ORDER BY c.current_count DESC
         """)
+
         result = await self.db.execute(query, {"days": days})
         return [dict(r._mapping) for r in result.fetchall()]
 
