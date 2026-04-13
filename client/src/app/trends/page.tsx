@@ -267,7 +267,7 @@ export default function TrendsPage() {
           <ResponsiveContainer width="100%" height={380}>
             <BarChart
               data={comparison
-                .filter((n: any) => (n.incidents_current || 0) + (n.crimes_current || 0) > 0}
+                .filter((n: any) => (n.incidents_current || 0) + (n.crimes_current || 0) > 0)
                 .sort((a: any, b: any) => (b.incidents_current + b.crimes_current) - (a.incidents_current + a.crimes_current))
                 .slice(0, 12)
               }
