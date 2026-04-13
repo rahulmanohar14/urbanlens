@@ -23,15 +23,17 @@ function getHeatColor(count: number, max: number): string {
   return "rgba(108,92,231,0.05)";
 }
 
+function formatStreet(street: string): string {
+  if (!street) return "Unknown";
+  return street
+    .replace(/&amp;/g, "&")
+    .replace(/^INTERSECTION\s+/i, "")
+    .trim();
+}
+
 function SkeletonCard({ height }: { height: number }) {
   return (
-    <div style={{
-      ...card,
-      height: `${height}px`,
-      marginBottom: "16px",
-      position: "relative",
-      overflow: "hidden",
-    }}>
+    <div style={{ ...card, height: `${height}px`, marginBottom: "16px", position: "relative", overflow: "hidden" }}>
       <div style={{ width: "140px", height: "11px", background: "rgba(255,255,255,0.05)", borderRadius: "4px", marginBottom: "20px" }} />
       <div style={{
         position: "absolute", inset: 0,
@@ -80,7 +82,7 @@ export default function TrendsPage() {
 
   const filterByHood = async (id: string) => {
     setSelHood(id);
-    const params: any = { days: 365 };
+    const params: any = { days: 180 };
     if (id) params.neighborhood_id = parseInt(id);
     const res = await getTrends(params);
     setTrends(res.data.data || []);
@@ -128,7 +130,7 @@ export default function TrendsPage() {
 
       {/* Trends */}
       <div style={{ ...card, marginBottom: "16px" }}>
-        <p style={sectionTitle}>Incident Trends</p>
+        <p style={sectionTitle}>Incident Trends — Last 180 Days</p>
         {trends.length > 0 ? (
           <ResponsiveContainer width="100%" height={320}>
             <LineChart data={trends}>
@@ -231,7 +233,7 @@ export default function TrendsPage() {
                 <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                     <span style={{ fontSize: "11px", fontWeight: 700, color: "#6c5ce7", background: "rgba(108,92,231,0.1)", padding: "2px 8px", borderRadius: "6px", minWidth: "28px", textAlign: "center" }}>{i + 1}</span>
-                    <span style={{ fontSize: "12px", fontWeight: 500 }}>{s.street}</span>
+                    <span style={{ fontSize: "12px", fontWeight: 500 }}>{formatStreet(s.street)}</span>
                   </div>
                   <span style={{ fontSize: "12px", fontWeight: 600, color: "#a29bfe" }}>{s.count}</span>
                 </div>
@@ -248,7 +250,7 @@ export default function TrendsPage() {
                 <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                     <span style={{ fontSize: "11px", fontWeight: 700, color: "#ff6b6b", background: "rgba(255,107,107,0.1)", padding: "2px 8px", borderRadius: "6px", minWidth: "28px", textAlign: "center" }}>{i + 1}</span>
-                    <span style={{ fontSize: "12px", fontWeight: 500 }}>{s.street}</span>
+                    <span style={{ fontSize: "12px", fontWeight: 500 }}>{formatStreet(s.street)}</span>
                   </div>
                   <span style={{ fontSize: "12px", fontWeight: 600, color: "#ff6b6b" }}>{s.count}</span>
                 </div>
