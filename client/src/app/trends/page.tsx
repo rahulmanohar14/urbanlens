@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Cell } from "recharts";
-import { getTrends, getCategoryBreakdown, getResolutionTimes, getNeighborhoods, getCrimesByOffense, getTimePatterns, getTopStreets } from "@/lib/api";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, Cell } from "recharts";
+import { getTrends, getCategoryBreakdown, getNeighborhoods, getCrimesByOffense, getTimePatterns, getTopStreets, getComparison } from "@/lib/api";
 
 const COLORS = ["#6c5ce7", "#ff6b6b", "#00b894", "#fdcb6e", "#a29bfe", "#fd79a8", "#00cec9", "#e17055", "#55efc4", "#74b9ff"];
 const card = { background: "#12121a", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "12px", padding: "24px" };
-const tt = { contentStyle: { background: "#12121a", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "10px", fontSize: "11px", fontFamily: "Inter" } };
+const tt = { contentStyle: { background: "#12121a", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "10px", fontSize: "11px", fontFamily: "Inter", color: "#eeeef0" }, labelStyle: { color: "#eeeef0" }, itemStyle: { color: "#eeeef0" } };
 const sectionTitle = { fontSize: "11px", fontWeight: 600, color: "#55556a", textTransform: "uppercase" as const, letterSpacing: "0.5px", marginBottom: "16px" };
 
 const DAYS_ORDER = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
@@ -47,9 +47,9 @@ function SkeletonCard({ height }: { height: number }) {
 }
 
 export default function TrendsPage() {
+  const [comparison, setComparison] = useState<any[]>([]);
   const [trends, setTrends] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
-  const [resolution, setResolution] = useState<any[]>([]);
   const [crimeOffenses, setCrimeOffenses] = useState<any[]>([]);
   const [timePatterns, setTimePatterns] = useState<any[]>([]);
   const [topStreets, setTopStreets] = useState<any>({ incidents: [], crimes: [] });
@@ -61,20 +61,20 @@ export default function TrendsPage() {
     Promise.all([
       getTrends({ days: 180 }),
       getCategoryBreakdown({ days: 180 }),
-      getResolutionTimes(),
       getNeighborhoods(),
       getCrimesByOffense(),
       getTimePatterns(),
       getTopStreets(),
+      getComparison({ days: 180 }),
     ])
-      .then(([t, c, r, h, crimes, tp, ts]) => {
+      .then(([t, c, h, crimes, tp, ts, comp]) => {
         setTrends(t.data.data || []);
         setCategories(c.data || []);
-        setResolution(r.data || []);
         setHoods(h.data || []);
         setCrimeOffenses(crimes.data || []);
         setTimePatterns(tp.data || []);
         setTopStreets(ts.data || { incidents: [], crimes: [] });
+        setComparison(comp.data || []);
         setLoading(false);
       })
       .catch(() => setLoading(false));
@@ -260,17 +260,33 @@ export default function TrendsPage() {
         </div>
       </div>
 
-      {/* Resolution Time */}
+      {/* Neighborhood Comparison */}
       <div style={card}>
-        <p style={sectionTitle}>Resolution Time by Category (hours)</p>
-        {resolution.length > 0 ? (
-          <ResponsiveContainer width="100%" height={320}>
-            <BarChart data={resolution.slice(0, 10)} layout="vertical">
+        <p style={sectionTitle}>Incidents vs Crimes by Neighborhood — Last 180 Days</p>
+        {comparison.length > 0 ? (
+          <ResponsiveContainer width="100%" height={380}>
+            <BarChart
+              data={comparison
+                .filter((n: any) => (n.incidents_current || 0) + (n.crimes_current || 0) > 0}
+                .sort((a: any, b: any) => (b.incidents_current + b.crimes_current) - (a.incidents_current + a.crimes_current))
+                .slice(0, 12)
+              }
+              layout="vertical"
+            >
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
               <XAxis type="number" stroke="#55556a" fontSize={10} />
-              <YAxis type="category" dataKey="category" stroke="#55556a" fontSize={9} width={130} tickFormatter={(v) => v.length > 18 ? v.slice(0, 18) + "..." : v} />
-              <Tooltip {...tt} formatter={(value: any) => [`${value}h`, "Avg Time"]} />
-              <Bar dataKey="avg_hours" radius={[0, 4, 4, 0]}>{resolution.slice(0, 10).map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}</Bar>
+              <YAxis
+                type="category"
+                dataKey="neighborhood"
+                stroke="#55556a"
+                fontSize={9}
+                width={110}
+                tickFormatter={(v) => v.length > 16 ? v.slice(0, 16) + "..." : v}
+              />
+              <Tooltip {...tt} />
+              <Legend wrapperStyle={{ fontSize: "11px", color: "#9898a6", paddingTop: "12px" }} />
+              <Bar dataKey="incidents_current" name="311 Incidents" fill="#6c5ce7" radius={[0, 3, 3, 0]} stackId="a" />
+              <Bar dataKey="crimes_current" name="Crimes" fill="#ff6b6b" radius={[0, 3, 3, 0]} stackId="a" />
             </BarChart>
           </ResponsiveContainer>
         ) : <p style={{ fontSize: "12px", color: "#55556a" }}>No data</p>}
