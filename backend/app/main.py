@@ -1,10 +1,9 @@
-# backend/app/main.py
-
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
 import time
+import redis
 
 from app.config import settings
 from app.routers import incidents, crimes, neighborhoods, analytics, predictions, auth
@@ -24,7 +23,6 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[settings.FRONTEND_URL, "http://localhost:3000"],
@@ -34,7 +32,6 @@ app.add_middleware(
 )
 
 
-# Response time header
 @app.middleware("http")
 async def add_timing(request: Request, call_next):
     start = time.perf_counter()
@@ -43,7 +40,6 @@ async def add_timing(request: Request, call_next):
     return response
 
 
-# Global error handler
 @app.exception_handler(Exception)
 async def global_handler(request: Request, exc: Exception):
     return JSONResponse(
@@ -52,7 +48,6 @@ async def global_handler(request: Request, exc: Exception):
     )
 
 
-# Register routers
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["Auth"])
 app.include_router(incidents.router, prefix="/api/v1/incidents", tags=["Incidents"])
 app.include_router(crimes.router, prefix="/api/v1/crimes", tags=["Crimes"])
@@ -63,4 +58,20 @@ app.include_router(predictions.router, prefix="/api/v1/predictions", tags=["Pred
 
 @app.get("/health")
 async def health():
-    return {"status": "healthy", "service": "urbanlens-api", "version": "1.0.0"}
+    """
+    Health check used by UptimeRobot to keep Render + Upstash Redis alive.
+    Pings Redis so Upstash never goes inactive.
+    """
+    redis_status = "ok"
+    try:
+        r = redis.from_url(settings.REDIS_URL)
+        r.ping()
+    except Exception as e:
+        redis_status = f"error: {e}"
+
+    return {
+        "status": "healthy",
+        "service": "urbanlens-api",
+        "version": "1.0.0",
+        "redis": redis_status,
+    }
