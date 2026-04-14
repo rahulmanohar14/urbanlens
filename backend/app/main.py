@@ -57,10 +57,11 @@ app.include_router(predictions.router, prefix="/api/v1/predictions", tags=["Pred
 
 
 @app.get("/health")
+@app.head("/health")
 async def health():
     """
     Health check used by UptimeRobot to keep Render + Upstash Redis alive.
-    Pings Redis so Upstash never goes inactive.
+    Pings Redis so Upstash never goes inactive. Supports both GET and HEAD requests.
     """
     redis_status = "ok"
     try:
