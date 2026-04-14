@@ -13,12 +13,15 @@ L.Icon.Default.mergeOptions({
   shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
 });
 
-const getColor = (count: number) => {
-  if (count > 1500) return "#6c0000";
-  if (count > 1000) return "#d63031";
-  if (count > 700) return "#e17055";
-  if (count > 400) return "#fdcb6e";
-  if (count > 150) return "#ffeaa7";
+// Dynamic color scale based on max value in current dataset
+const getColor = (count: number, max: number) => {
+  if (max === 0) return "#00b894";
+  const ratio = count / max;
+  if (ratio > 0.8) return "#6c0000";
+  if (ratio > 0.6) return "#d63031";
+  if (ratio > 0.4) return "#e17055";
+  if (ratio > 0.25) return "#fdcb6e";
+  if (ratio > 0.1) return "#ffeaa7";
   return "#00b894";
 };
 
@@ -102,30 +105,36 @@ export default function Map({ mode, onNeighborhoodClick, onNearbySearch }: MapPr
   };
 
   const getDensityValue = (p: any) => {
-    if (mode === "incidents") return p.total_incidents;
-    if (mode === "crimes") return p.total_crimes;
-    return p.total_incidents + p.total_crimes;
+    if (mode === "incidents") return p.total_incidents || 0;
+    if (mode === "crimes") return p.total_crimes || 0;
+    return (p.total_incidents || 0) + (p.total_crimes || 0);
+  };
+
+  // Compute max across all neighborhoods for dynamic color scaling
+  const getMax = () => {
+    if (!geojson?.features) return 1;
+    return Math.max(...geojson.features.map((f: any) => getDensityValue(f.properties)), 1);
   };
 
   const styleNeighborhood = (feature: any, layer: L.Layer) => {
     const p = feature.properties;
     const density = getDensityValue(p);
+    const max = getMax();
 
     (layer as L.Path).setStyle({
-      fillColor: getColor(density),
+      fillColor: getColor(density, max),
       weight: 1, opacity: 0.8,
       color: "rgba(255,255,255,0.08)",
       fillOpacity: 0.55,
     });
 
     const activeLabel = mode === "incidents" ? "Incidents" : mode === "crimes" ? "Crimes" : "Total";
-    const activeValue = density;
 
     layer.bindTooltip(
       `<div style="font-size:11px;font-family:Inter,sans-serif">
         <strong>${p.name}</strong><br/>
-        <span style="color:${mode === "crimes" ? "#ff6b6b" : mode === "incidents" ? "#a29bfe" : "#ffeaa7"}">${activeLabel}: ${activeValue}</span>
-        ${mode === "both" ? `<br/><span style="color:#a29bfe">311: ${p.total_incidents}</span> · <span style="color:#ff6b6b">Crime: ${p.total_crimes}</span>` : ""}
+        <span style="color:${mode === "crimes" ? "#ff6b6b" : mode === "incidents" ? "#a29bfe" : "#ffeaa7"}">${activeLabel}: ${density.toLocaleString()}</span>
+        ${mode === "both" ? `<br/><span style="color:#a29bfe">311: ${(p.total_incidents || 0).toLocaleString()}</span> · <span style="color:#ff6b6b">Crime: ${(p.total_crimes || 0).toLocaleString()}</span>` : ""}
       </div>`,
       { sticky: true }
     );
@@ -137,7 +146,6 @@ export default function Map({ mode, onNeighborhoodClick, onNearbySearch }: MapPr
     });
   };
 
-  // Force GeoJSON re-render when mode changes
   const geojsonKey = geojson ? `hoods-${mode}` : "loading";
 
   return (
