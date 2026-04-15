@@ -86,7 +86,7 @@ export default function Dashboard() {
         <div style={{ marginBottom: "24px" }}>
           <h1 style={{ fontSize: "20px", fontWeight: 600, letterSpacing: "-0.3px" }}>Dashboard</h1>
           <p style={{ fontSize: "12px", color: "#55556a", marginTop: "4px" }}>
-            Live geospatial analytics across Boston — updated daily from{" "}
+            Live geospatial analytics across Boston - updated daily from{" "}
             <a href="https://data.boston.gov" target="_blank" rel="noreferrer"
               style={{ color: "#6c5ce7", textDecoration: "none" }}>
               Analyze Boston

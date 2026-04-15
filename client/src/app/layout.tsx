@@ -3,7 +3,7 @@ import "./globals.css";
 import TopBar from "@/components/TopBar";
 
 export const metadata: Metadata = {
-  title: "UrbanLens — Boston Urban Analytics",
+  title: "UrbanLens - Boston Urban Analytics",
   description: "Geospatial analytics platform for Boston city data",
 };
 
