@@ -6,16 +6,28 @@ import { getIncidentCategories, getCrimesByOffense } from "@/lib/api";
 interface Props {
   onCategoryChange: (category: string | null, type: "incident" | "crime" | null) => void;
   selectedCategory: string | null;
+  selectedType: "incident" | "crime" | null;
   mode: "both" | "incidents" | "crimes";
 }
 
-export default function Filters({ onCategoryChange, selectedCategory, mode }: Props) {
+export default function Filters({ onCategoryChange, selectedCategory, selectedType, mode }: Props) {
   const [incidentCats, setIncidentCats] = useState<{ category: string; count: number }[]>([]);
   const [crimeOffenses, setCrimeOffenses] = useState<{ offense_description: string; count: number }[]>([]);
 
   useEffect(() => {
-    getIncidentCategories().then((r) => setIncidentCats(r.data)).catch(console.error);
-    getCrimesByOffense().then((r) => setCrimeOffenses(r.data)).catch(console.error);
+    getIncidentCategories()
+      .then((r) => {
+        const data = Array.isArray(r.data) ? r.data : (r.data?.data || []);
+        setIncidentCats(data);
+      })
+      .catch(console.error);
+
+    getCrimesByOffense()
+      .then((r) => {
+        const data = Array.isArray(r.data) ? r.data : (r.data?.data || []);
+        setCrimeOffenses(data);
+      })
+      .catch(console.error);
   }, []);
 
   // Reset filter when mode changes
@@ -29,13 +41,13 @@ export default function Filters({ onCategoryChange, selectedCategory, mode }: Pr
       onCategoryChange(null, null);
       return;
     }
-    // Value format: "type::category"
     const [type, ...rest] = val.split("::");
     onCategoryChange(rest.join("::"), type as "incident" | "crime");
   };
 
-  const currentValue = selectedCategory
-    ? `${mode === "crimes" ? "crime" : "incident"}::${selectedCategory}`
+  // Use actual selectedType to build the current value — fixes "both" mode bug
+  const currentValue = selectedCategory && selectedType
+    ? `${selectedType}::${selectedCategory}`
     : "";
 
   return (
@@ -59,7 +71,7 @@ export default function Filters({ onCategoryChange, selectedCategory, mode }: Pr
       >
         <option value="">All Categories</option>
 
-        {(mode === "incidents" || mode === "both") && (
+        {(mode === "incidents" || mode === "both") && incidentCats.length > 0 && (
           <optgroup label="── 311 Incidents">
             {incidentCats.slice(0, 12).map((c) => (
               <option key={`incident::${c.category}`} value={`incident::${c.category}`}>
@@ -69,7 +81,7 @@ export default function Filters({ onCategoryChange, selectedCategory, mode }: Pr
           </optgroup>
         )}
 
-        {(mode === "crimes" || mode === "both") && (
+        {(mode === "crimes" || mode === "both") && crimeOffenses.length > 0 && (
           <optgroup label="── Crimes">
             {crimeOffenses.slice(0, 12).map((c) => (
               <option key={`crime::${c.offense_description}`} value={`crime::${c.offense_description}`}>

@@ -102,6 +102,7 @@ export default function Dashboard() {
           <Filters
             onCategoryChange={handleCategoryChange}
             selectedCategory={selectedCategory}
+            selectedType={selectedType}
             mode={mapMode}
           />
           <div style={{ display: "flex", alignItems: "center", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "8px", padding: "3px", flexShrink: 0 }}>
